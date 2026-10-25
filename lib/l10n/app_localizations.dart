@@ -212,6 +212,24 @@ abstract class AppLocalizations {
   /// **'Source: {name}'**
   String source(String name);
 
+  /// Source label for times calculated with Saudi Arabia's official method. Must always say they are calculated.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculated on this phone (Umm al-Qura method)'**
+  String get calculatedUmmAlQura;
+
+  /// No description provided for @calculatedMuslimWorldLeague.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculated on this phone (Muslim World League method)'**
+  String get calculatedMuslimWorldLeague;
+
+  /// No description provided for @calculated.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculated on this phone'**
+  String get calculated;
+
   /// No description provided for @hijriDate.
   ///
   /// In en, this message translates to:

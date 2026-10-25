@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:timezone/data/latest.dart' as tzdata;
+import 'package:timezone/data/latest_all.dart' as tzdata;
 
+import 'package:prayer_times/data/calculated_timetable.dart';
 import 'package:prayer_times/data/timetable.dart';
 import 'package:prayer_times/l10n/app_language.dart';
 import 'package:prayer_times/l10n/app_localizations.dart';
@@ -86,6 +87,51 @@ void main() {
     await finishTransition(tester);
 
     expect(find.text('14:57'), findsOneWidget);
+  });
+
+  testWidgets('labels calculated times clearly, in both languages', (
+    tester,
+  ) async {
+    final calculated = calculateTimetable(
+      latitude: 51.5072,
+      longitude: -0.1276,
+      timeZone: 'Europe/London',
+      year: 2026,
+      method: CalculatedMethod.muslimWorldLeague,
+    );
+
+    await pumpHome(tester, loadTimetable: (_) async => calculated);
+    expect(
+      find.textContaining(
+        'Calculated on this phone (Muslim World League method)',
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Calculated (muslimWorldLeague)'), findsNothing);
+
+    await pumpHome(
+      tester,
+      loadTimetable: (_) async => calculated,
+      locale: const Locale('ar'),
+    );
+    expect(find.textContaining('محسوبة على هذا الجهاز'), findsOneWidget);
+  });
+
+  testWidgets('labels as calculated even a method it does not know', (
+    tester,
+  ) async {
+    final sample = sampleTimetable();
+    final unknownMethod = Timetable(
+      sourceId: 'calculated-someNewMethod',
+      sourceName: 'Should not be shown as a source name',
+      timeZone: sample.timeZone,
+      days: sample.days,
+    );
+
+    await pumpHome(tester, loadTimetable: (_) async => unknownMethod);
+
+    expect(find.textContaining('Calculated on this phone'), findsOneWidget);
+    expect(find.textContaining('Should not be shown'), findsNothing);
   });
 
   testWidgets('shows prayer names and labels in Arabic', (tester) async {

@@ -71,6 +71,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get calculatedUmmAlQura =>
+      'Calculated on this phone (Umm al-Qura method)';
+
+  @override
+  String get calculatedMuslimWorldLeague =>
+      'Calculated on this phone (Muslim World League method)';
+
+  @override
+  String get calculated => 'Calculated on this phone';
+
+  @override
   String hijriDate(int day, String month, int year) {
     return '$day $month $year AH';
   }

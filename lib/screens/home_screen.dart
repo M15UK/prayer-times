@@ -3,6 +3,7 @@ import 'package:hijri/hijri_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:timezone/timezone.dart' as tz;
 
+import 'package:prayer_times/data/calculated_timetable.dart';
 import 'package:prayer_times/data/prayer_clock.dart';
 import 'package:prayer_times/data/timetable.dart';
 import 'package:prayer_times/l10n/app_language.dart';
@@ -152,12 +153,43 @@ class _TodayView extends StatelessWidget {
           highlight: nextToday ? next.prayer : null,
         ),
         const SizedBox(height: 16),
-        Text(
-          // The isolate marks (U+2068 and U+2069) keep an English name in one
-          // piece inside Arabic text, so its closing ")" stays put.
-          text.source('\u2068${timetable.sourceName}\u2069'),
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
+        _SourceLabel(timetable: timetable),
+      ],
+    );
+  }
+}
+
+/// Unicode isolate marks (U+2068, U+2069): they keep an English name in one
+/// piece inside Arabic text, so its closing ")" stays put.
+final _isolateStart = String.fromCharCode(0x2068);
+final _isolateEnd = String.fromCharCode(0x2069);
+
+/// Where the times came from. Calculated times say so, with an icon, so
+/// they can never be mistaken for an official timetable.
+class _SourceLabel extends StatelessWidget {
+  const _SourceLabel({required this.timetable});
+
+  final Timetable timetable;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = AppLocalizations.of(context);
+    final calculated = isCalculated(timetable);
+    final name = switch (calculatedMethodOf(timetable)) {
+      CalculatedMethod.ummAlQura => text.calculatedUmmAlQura,
+      CalculatedMethod.muslimWorldLeague => text.calculatedMuslimWorldLeague,
+      // A method this version doesn't know: still say "calculated".
+      null when calculated => text.calculated,
+      null => '$_isolateStart${timetable.sourceName}$_isolateEnd',
+    };
+    final style = Theme.of(context).textTheme.bodySmall;
+    return Row(
+      children: [
+        if (calculated) ...[
+          Icon(Icons.calculate_outlined, size: 16, color: style?.color),
+          const SizedBox(width: 4),
+        ],
+        Expanded(child: Text(text.source(name), style: style)),
       ],
     );
   }

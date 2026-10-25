@@ -38,7 +38,14 @@ Researched 25 October 2026. Every claim links to where it came from. Anything no
 - **Export:** "you can export the displayed prayer times as PDF or CSV". That's ideal as test reference data.
 - **Terms:** they cover use of the website only and say nothing about reuse in apps ([terms](https://www.ummulqura.org.sa/en/terms-and-conditions)). No API.
 - **So:** the official times are themselves a calculation. If our calculation matches their export to the minute across a full year, we can honestly label it **"Umm al-Qura method (Saudi official standard)"** while still saying it was calculated on the phone.
-- **Method:** Fajr 18.5°, Isha 90 minutes after Maghrib. The library docs recommend adding 30 minutes to Isha in Ramadan (120 in total). **Unconfirmed until we check the Ramadan dates in the official export.**
+- **Method:** Fajr 18.5°, Isha 90 minutes after Maghrib, **120 in Ramadan** (confirmed: 1 Ramadan 1447, 18 Feb 2026, Isha moves from Maghrib +90 to +120, and back on 1 Shawwal).
+- **Checked against the whole official 2026 table for Riyadh** (25 October 2026), using the site's own Riyadh point, **24.67° N, 46.69° E** (from its `cities.json`):
+  - **Every time is within 1 minute of the official one.** About 85% are exact (Dhuhr 356/365, Sunrise 346, Maghrib and Isha 342, Asr 260, Fajr 205).
+  - That needs the official rounding: prayers **up** to the next minute, sunrise **down**. Rounding to the nearest minute matched only about 50%, with some 2-minute gaps.
+  - The remaining ±1 minute (mostly Fajr and Asr) goes both ways, so their astronomical code differs slightly. It isn't published for reuse, so we don't copy it.
+  - **Hijri dates:** the `hijri` library matched the official date on all 365 days.
+- **Decision:** Saudi times are calculated on the phone and **labelled "Calculated on this phone (Umm al-Qura method)"**, never as the official timetable, because they are not minute-exact.
+- **To get exact official times:** ask KACST through the site's contact form for permission to republish its timetable through our API, as was done for London.
 - **Jama'ah (iqamah):** no official nationwide schedule found. The rules found were local or temporary: Makkah during Hajj ([Bernama](https://www.bernama.com/en/news.php?id=2559338)), Ramadan Fajr and Isha ([Gulf News](https://gulfnews.com/world/gulf/saudi/saudi-arabia-orders-reduction-of-adhan-iqama-gap-to-10-minutes-for-fajr-and-isha-prayers-in-ramadan-1.94712564)). **Decision: Saudi times show the start (adhan) time only.**
 
 ## Mosque platforms
@@ -62,6 +69,11 @@ Researched 25 October 2026. Every claim links to where it came from. Anything no
 - **There is no single agreed UK standard.** Methods in use include one-seventh of the night ([Salahtimes](https://www.salahtimes.com/faq/latitude), its UK default), a fixed 65 minutes for Isha ([SeekersGuidance](https://seekersguidance.org/answers/hanafi-fiqh/what-are-the-alternative-methods-to-isha-time-in-high-latitudes-when-isha-prayer-does-not-come-in/)), and others.
 - `adhan_dart`'s own `recommended()` rule picks **Seventh of the Night above 48°** latitude.
 - **Decision:** the calculated default is Muslim World League with Seventh of the Night, with a setting to change it. Official timetables always win, and they handle summer in their own way.
+- **Measured limits (25 October 2026), checking every day of 2026:**
+  - Calculated times work all year up to about 60° latitude. That covers all of the UK, including Lerwick at 60.15°, plus Oslo, Bergen and Helsinki.
+  - From about 61° (Anchorage, Trondheim, Reykjavik), Isha falls after midnight in early summer. The app refuses to calculate there, and anywhere inside the polar circles, rather than show impossible times.
+  - The library's rule only checked northern latitudes; we use the distance from the equator, so the far south (e.g. Ushuaia) gets the same treatment.
+- **Time zone names:** phones report names like "Europe/Oslo", which the newest time zone database keeps only as aliases. The app loads the dataset that includes aliases (`latest_all`).
 
 ## Hijri date
 
