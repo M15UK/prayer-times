@@ -25,7 +25,8 @@ flutter test
 | `lib/data/timetable.dart` | The timetable format shared by our API and the app, with its checks |
 | `lib/data/timetable_repository.dart` | Downloads timetables and keeps a copy on the phone for offline use |
 | `lib/data/prayer_clock.dart` | Turns clock times into real moments: next prayer and countdown, across clock changes |
-| `lib/data/asr_setting.dart` | The user's Asr choice (Standard or Hanafi), saved on the phone |
+| `lib/data/saved_setting.dart` | A user choice saved on the phone (Asr time, language) |
+| `lib/l10n/app_language.dart` | The language options: the phone's language, English or Arabic |
 | `lib/screens/` | The screens: today's times, and settings |
 | `tool/build_api.dart` | Our daily job: fetches official timetables, checks them and writes our API files |
 | `.github/workflows/api.yml` | Runs that job every day and publishes the files on GitHub Pages |

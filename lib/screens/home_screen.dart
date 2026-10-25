@@ -5,6 +5,7 @@ import 'package:timezone/timezone.dart' as tz;
 
 import 'package:prayer_times/data/prayer_clock.dart';
 import 'package:prayer_times/data/timetable.dart';
+import 'package:prayer_times/l10n/app_language.dart';
 import 'package:prayer_times/l10n/app_localizations.dart';
 import 'package:prayer_times/screens/settings_screen.dart';
 
@@ -15,14 +16,16 @@ class HomeScreen extends StatefulWidget {
     super.key,
     required this.loadTimetable,
     required this.asrMethod,
+    required this.language,
     this.now = DateTime.now,
   });
 
   /// Loads the timetable covering [now], or null if none is available.
   final Future<Timetable?> Function(DateTime now) loadTimetable;
 
-  /// The user's Asr choice from settings.
+  /// The user's choices from settings.
   final ValueNotifier<AsrMethod> asrMethod;
+  final ValueNotifier<AppLanguage> language;
 
   /// The current time. Tests pass a fixed moment.
   final DateTime Function() now;
@@ -52,7 +55,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _openSettings() => Navigator.of(context).push(
     MaterialPageRoute<void>(
-      builder: (_) => SettingsScreen(asrMethod: widget.asrMethod),
+      builder: (_) => SettingsScreen(
+        language: widget.language,
+        asrMethod: widget.asrMethod,
+      ),
     ),
   );
 
