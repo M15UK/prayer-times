@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:timezone/data/latest.dart' as tzdata;
 
+import 'package:prayer_times/data/timetable.dart';
 import 'package:prayer_times/main.dart';
+
+import '../unit/data/sample_timetable.dart';
 
 /// Starts the app with the phone set to [language], then checks the title
 /// text and which way the layout reads.
@@ -16,8 +20,16 @@ Future<void> expectAppInLanguage(
   addTearDown(tester.platformDispatcher.clearLocalesTestValue);
 
   // Act
-  await tester.pumpWidget(const PrayerTimesApp());
-  await tester.pumpAndSettle();
+  await tester.pumpWidget(
+    PrayerTimesApp(
+      loadTimetable: (_) async => sampleTimetable(),
+      asrMethod: ValueNotifier(AsrMethod.standard),
+    ),
+  );
+  // Two frames, not pumpAndSettle: the countdown ticks every second, so the
+  // screen never "settles".
+  await tester.pump();
+  await tester.pump();
 
   // Assert
   final titleFinder = find.text(title);
@@ -26,6 +38,8 @@ Future<void> expectAppInLanguage(
 }
 
 void main() {
+  setUpAll(tzdata.initializeTimeZones);
+
   testWidgets('shows English left to right when the phone is in English', (
     tester,
   ) async {

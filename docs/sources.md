@@ -68,3 +68,7 @@ Researched 25 October 2026. Every claim links to where it came from. Anything no
 - Umm al-Qura is a computed calendar. Communities that rely on moon sighting can differ by 1 to 3 days around Ramadan and Dhu al-Hijjah ([van Gent](https://webspace.science.uu.nl/~gent0113/islam/ummalqura_introduction.htm)).
 - [`hijri`](https://pub.dev/packages/hijri) 3.0.1 converts to Umm al-Qura, but its algorithm is **unconfirmed**. Test value from the official site: **25 Oct 2026 = 14 Jumada al-Ula 1448**.
 - **Decision:** show "Umm al-Qura" next to the Hijri date, with a ±1 day setting for UK users who follow moon sighting.
+- **Checked on 25 October 2026:** `hijri` uses a lookup table of Umm al-Qura month starts (1356–1500 AH), not a formula.
+  - It agrees with Java's built-in Umm al-Qura calendar on **every day from January 2025 to July 2029**, and with the official site for today.
+  - It disagrees on one month in December 2024 and on several months from August 2029. Which side is right there is **unconfirmed**, so re-check against ummulqura.org.sa before 2029.
+  - Its Arabic month names contain spelling mistakes (e.g. "جمادى الأول"). The app takes only the day, month and year numbers from it and uses its own month names.

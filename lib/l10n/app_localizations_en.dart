@@ -13,5 +13,89 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Prayer Times';
 
   @override
-  String get todayPlaceholder => 'Today\'s prayer times will appear here.';
+  String get prayerFajr => 'Fajr';
+
+  @override
+  String get prayerSunrise => 'Sunrise';
+
+  @override
+  String get prayerDhuhr => 'Dhuhr';
+
+  @override
+  String get prayerAsr => 'Asr';
+
+  @override
+  String get prayerMaghrib => 'Maghrib';
+
+  @override
+  String get prayerIsha => 'Isha';
+
+  @override
+  String get startHeader => 'Start';
+
+  @override
+  String get jamaahHeader => 'Jama\'ah';
+
+  @override
+  String get settings => 'Settings';
+
+  @override
+  String get asrTime => 'Asr time';
+
+  @override
+  String get asrStandard => 'Standard (Shafi\'i, Maliki, Hanbali)';
+
+  @override
+  String get asrStandardHint => 'The earlier Asr time';
+
+  @override
+  String get asrHanafiOption => 'Hanafi';
+
+  @override
+  String get asrHanafiHint => 'The later Asr time';
+
+  @override
+  String nextPrayerIn(String prayer, String countdown) {
+    return '$prayer in $countdown';
+  }
+
+  @override
+  String source(String name) {
+    return 'Source: $name';
+  }
+
+  @override
+  String hijriDate(int day, String month, int year) {
+    return '$day $month $year AH';
+  }
+
+  @override
+  String hijriMonth(String month) {
+    String _temp0 = intl.Intl.selectLogic(month, {
+      'm1': 'Muharram',
+      'm2': 'Safar',
+      'm3': 'Rabi al-Awwal',
+      'm4': 'Rabi al-Thani',
+      'm5': 'Jumada al-Ula',
+      'm6': 'Jumada al-Akhirah',
+      'm7': 'Rajab',
+      'm8': 'Sha\'ban',
+      'm9': 'Ramadan',
+      'm10': 'Shawwal',
+      'm11': 'Dhu al-Qa\'dah',
+      'm12': 'Dhu al-Hijjah',
+      'other': '',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get ummAlQuraCalendar => 'Umm al-Qura calendar';
+
+  @override
+  String get loadFailed =>
+      'Couldn\'t load prayer times. Check your internet connection and try again.';
+
+  @override
+  String get retry => 'Try again';
 }

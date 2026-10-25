@@ -48,6 +48,31 @@ void main() {
     expect(decoded.days['2026-10-26']?.jamaah, isEmpty);
   });
 
+  group('startOf', () {
+    const day = DayTimes(
+      start: {Prayer.dhuhr: '11:50', Prayer.asr: '14:17'},
+      asrHanafi: '14:57',
+    );
+
+    test('gives the standard Asr time for Standard', () {
+      expect(day.startOf(Prayer.asr, AsrMethod.standard), '14:17');
+    });
+
+    test('gives the later Asr time for Hanafi', () {
+      expect(day.startOf(Prayer.asr, AsrMethod.hanafi), '14:57');
+    });
+
+    test('changes only Asr', () {
+      expect(day.startOf(Prayer.dhuhr, AsrMethod.hanafi), '11:50');
+    });
+
+    test('falls back to the standard time when no Hanafi time exists', () {
+      const noHanafi = DayTimes(start: {Prayer.asr: '14:17'});
+
+      expect(noHanafi.startOf(Prayer.asr, AsrMethod.hanafi), '14:17');
+    });
+  });
+
   group('fromJson rejects downloads that are not a valid timetable:', () {
     /// [day] wrapped in a timetable and sent through JSON, as if downloaded.
     Object? downloadedWith(Map<String, DayTimes> days) => jsonDecode(

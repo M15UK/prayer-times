@@ -1,13 +1,54 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timezone/data/latest.dart' as tzdata;
+import 'package:timezone/timezone.dart' as tz;
 
+import 'package:prayer_times/data/asr_setting.dart';
+import 'package:prayer_times/data/timetable.dart';
+import 'package:prayer_times/data/timetable_repository.dart';
 import 'package:prayer_times/l10n/app_localizations.dart';
+import 'package:prayer_times/screens/home_screen.dart';
 
-void main() {
-  runApp(const PrayerTimesApp());
+Future<void> main() async {
+  // Plugins (like the storage folder lookup) need Flutter started first.
+  WidgetsFlutterBinding.ensureInitialized();
+  // Time zone rules (clock changes) for every place, past and future.
+  tzdata.initializeTimeZones();
+  // The app's private folder, kept until the app is uninstalled.
+  final supportDir = await getApplicationSupportDirectory();
+  final repository = TimetableRepository(
+    cacheDir: Directory('${supportDir.path}/timetables'),
+  );
+  // shortcut: London only until Step 6 adds choosing a location.
+  final london = tz.getLocation('Europe/London');
+  runApp(
+    PrayerTimesApp(
+      // London's year, not the phone's: at 20:00 on 31 December in New York
+      // it is already the new year in London.
+      loadTimetable: (now) => repository.load(
+        place: 'london',
+        year: tz.TZDateTime.from(now, london).year,
+      ),
+      asrMethod: AsrSetting(await SharedPreferences.getInstance()),
+    ),
+  );
 }
 
 class PrayerTimesApp extends StatelessWidget {
-  const PrayerTimesApp({super.key});
+  const PrayerTimesApp({
+    super.key,
+    required this.loadTimetable,
+    required this.asrMethod,
+  });
+
+  /// Loads the timetable covering a moment, or null if none is available.
+  final Future<Timetable?> Function(DateTime now) loadTimetable;
+
+  /// The user's Asr choice, shared by the main and settings screens.
+  final ValueNotifier<AsrMethod> asrMethod;
 
   @override
   Widget build(BuildContext context) {
@@ -24,21 +65,7 @@ class PrayerTimesApp extends StatelessWidget {
         colorSchemeSeed: Colors.teal,
         brightness: Brightness.dark,
       ),
-      home: const HomeScreen(),
-    );
-  }
-}
-
-/// Placeholder home screen, replaced by the prayer times screen in Step 5.
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final text = AppLocalizations.of(context);
-    return Scaffold(
-      appBar: AppBar(title: Text(text.appTitle)),
-      body: Center(child: Text(text.todayPlaceholder)),
+      home: HomeScreen(loadTimetable: loadTimetable, asrMethod: asrMethod),
     );
   }
 }

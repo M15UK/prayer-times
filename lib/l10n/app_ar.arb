@@ -1,5 +1,25 @@
 {
   "@@locale": "ar",
   "appTitle": "مواقيت الصلاة",
-  "todayPlaceholder": "ستظهر مواقيت صلاة اليوم هنا."
+  "prayerFajr": "الفجر",
+  "prayerSunrise": "الشروق",
+  "prayerDhuhr": "الظهر",
+  "prayerAsr": "العصر",
+  "prayerMaghrib": "المغرب",
+  "prayerIsha": "العشاء",
+  "startHeader": "الأذان",
+  "jamaahHeader": "الإقامة",
+  "settings": "الإعدادات",
+  "asrTime": "وقت العصر",
+  "asrStandard": "الجمهور (الشافعي والمالكي والحنبلي)",
+  "asrStandardHint": "وقت العصر الأبكر",
+  "asrHanafiOption": "الحنفي",
+  "asrHanafiHint": "وقت العصر المتأخر",
+  "nextPrayerIn": "{prayer} بعد {countdown}",
+  "source": "المصدر: {name}",
+  "hijriDate": "{day} {month} {year} هـ",
+  "hijriMonth": "{month, select, m1{محرم} m2{صفر} m3{ربيع الأول} m4{ربيع الآخر} m5{جمادى الأولى} m6{جمادى الآخرة} m7{رجب} m8{شعبان} m9{رمضان} m10{شوال} m11{ذو القعدة} m12{ذو الحجة} other{}}",
+  "ummAlQuraCalendar": "تقويم أم القرى",
+  "loadFailed": "تعذّر تحميل مواقيت الصلاة. تحقّق من اتصالك بالإنترنت ثم حاول مرة أخرى.",
+  "retry": "حاول مرة أخرى"
 }

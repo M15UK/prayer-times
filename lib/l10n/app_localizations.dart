@@ -104,11 +104,131 @@ abstract class AppLocalizations {
   /// **'Prayer Times'**
   String get appTitle;
 
-  /// Temporary home screen text until the times screen is built in Step 5.
+  /// No description provided for @prayerFajr.
   ///
   /// In en, this message translates to:
-  /// **'Today\'s prayer times will appear here.'**
-  String get todayPlaceholder;
+  /// **'Fajr'**
+  String get prayerFajr;
+
+  /// No description provided for @prayerSunrise.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunrise'**
+  String get prayerSunrise;
+
+  /// No description provided for @prayerDhuhr.
+  ///
+  /// In en, this message translates to:
+  /// **'Dhuhr'**
+  String get prayerDhuhr;
+
+  /// No description provided for @prayerAsr.
+  ///
+  /// In en, this message translates to:
+  /// **'Asr'**
+  String get prayerAsr;
+
+  /// No description provided for @prayerMaghrib.
+  ///
+  /// In en, this message translates to:
+  /// **'Maghrib'**
+  String get prayerMaghrib;
+
+  /// No description provided for @prayerIsha.
+  ///
+  /// In en, this message translates to:
+  /// **'Isha'**
+  String get prayerIsha;
+
+  /// Column heading: when the prayer time begins (adhan).
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get startHeader;
+
+  /// Column heading: when the congregation prays (iqamah).
+  ///
+  /// In en, this message translates to:
+  /// **'Jama\'ah'**
+  String get jamaahHeader;
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// No description provided for @asrTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Asr time'**
+  String get asrTime;
+
+  /// No description provided for @asrStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard (Shafi\'i, Maliki, Hanbali)'**
+  String get asrStandard;
+
+  /// No description provided for @asrStandardHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The earlier Asr time'**
+  String get asrStandardHint;
+
+  /// No description provided for @asrHanafiOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Hanafi'**
+  String get asrHanafiOption;
+
+  /// No description provided for @asrHanafiHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The later Asr time'**
+  String get asrHanafiHint;
+
+  /// Countdown to the next prayer.
+  ///
+  /// In en, this message translates to:
+  /// **'{prayer} in {countdown}'**
+  String nextPrayerIn(String prayer, String countdown);
+
+  /// Where the times on screen came from.
+  ///
+  /// In en, this message translates to:
+  /// **'Source: {name}'**
+  String source(String name);
+
+  /// No description provided for @hijriDate.
+  ///
+  /// In en, this message translates to:
+  /// **'{day} {month} {year} AH'**
+  String hijriDate(int day, String month, int year);
+
+  /// Hijri month name; month is m1 to m12.
+  ///
+  /// In en, this message translates to:
+  /// **'{month, select, m1{Muharram} m2{Safar} m3{Rabi al-Awwal} m4{Rabi al-Thani} m5{Jumada al-Ula} m6{Jumada al-Akhirah} m7{Rajab} m8{Sha\'ban} m9{Ramadan} m10{Shawwal} m11{Dhu al-Qa\'dah} m12{Dhu al-Hijjah} other{}}'**
+  String hijriMonth(String month);
+
+  /// No description provided for @ummAlQuraCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Umm al-Qura calendar'**
+  String get ummAlQuraCalendar;
+
+  /// No description provided for @loadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load prayer times. Check your internet connection and try again.'**
+  String get loadFailed;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get retry;
 }
 
 class _AppLocalizationsDelegate
