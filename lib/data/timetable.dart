@@ -18,6 +18,19 @@ final _clockTime = RegExp(r'^([01]\d|2[0-3]):[0-5]\d$');
 bool isClockTime(Object? value) =>
     value is String && _clockTime.hasMatch(value);
 
+/// True if [start] has all six times, each later than the one before.
+/// "HH:mm" text sorts like the times, so an Isha after midnight ("00:05")
+/// counts as out of order.
+bool startTimesInOrder(Map<Prayer, String> start) {
+  for (var i = 0; i < Prayer.values.length; i++) {
+    final time = start[Prayer.values[i]];
+    if (time == null) return false;
+    final previous = i == 0 ? '' : start[Prayer.values[i - 1]] ?? '';
+    if (time.compareTo(previous) <= 0) return false;
+  }
+  return true;
+}
+
 /// True for a real "yyyy-mm-dd" date such as "2026-10-25" (not "2026-13-40").
 bool isIsoDate(String value) =>
     value.length == 10 &&

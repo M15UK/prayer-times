@@ -29,6 +29,9 @@ flutter test
 | `lib/l10n/app_language.dart` | The language options: the phone's language, English or Arabic |
 | `lib/screens/` | The screens: today's times, and settings |
 | `tool/build_api.dart` | Our daily job: fetches official timetables, checks them and writes our API files |
+| `tool/fetch_umm_al_qura.dart` | Our yearly job: reads every Saudi city's official Umm al-Qura timetable |
+| `api/` | The Saudi timetables that job fetched, published with the rest |
+| `lib/data/calculated_timetable.dart` | Times calculated on the phone, only where no official timetable exists |
 | `.github/workflows/api.yml` | Runs that job every day and publishes the files on GitHub Pages |
 | `test/unit/` | Tests for logic with no screens |
 | `test/widget/` | Tests that build screens and check what they show |
@@ -36,8 +39,14 @@ flutter test
 
 ## Our API
 
-Each timetable is one file per source and year, for example:
+Each timetable is one file per place and year, for example:
 
-`https://m15uk.github.io/prayer-times/v1/london/2026.json`
+| Place | File |
+|---|---|
+| London (London Unified Prayer Timetable, updated daily) | `https://m15uk.github.io/prayer-times/v1/london/2026.json` |
+| A Saudi city (Umm al-Qura Calendar, fetched yearly) | `https://m15uk.github.io/prayer-times/v1/saudi/1001/2026.json` (1001 is Riyadh) |
+| The list of Saudi cities, with Arabic and English names and coordinates | `https://m15uk.github.io/prayer-times/v1/saudi/cities.json` |
 
 Times are local clock times (`HH:mm`) for the time zone named in the file.
+
+The Saudi files live in `api/`, written by `tool/fetch_umm_al_qura.dart` (run yearly by `.github/workflows/umm_al_qura.yml`). The London files are built fresh every day. Each publish copies `api/` first and adds London on top.

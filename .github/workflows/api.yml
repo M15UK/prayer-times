@@ -9,6 +9,10 @@ on:
     - cron: '30 3 * * *'
   # Adds a "Run workflow" button on the Actions tab.
   workflow_dispatch:
+  # Publishes straight away when committed timetables (api/) change.
+  push:
+    branches: [main]
+    paths: ['api/**']
 
 permissions:
   contents: read
@@ -38,6 +42,11 @@ jobs:
 
       # Publish nothing if our converter's own tests fail.
       - run: flutter test test/unit
+
+      # Each publish replaces the whole site, so start from the committed
+      # Saudi timetables (fetched yearly by umm_al_qura.yml).
+      - name: Start from the committed timetables
+        run: mkdir -p public && cp -R api/. public/
 
       - name: Build the timetable files
         run: dart run tool/build_api.dart public

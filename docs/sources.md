@@ -7,7 +7,7 @@ Researched 25 October 2026. Every claim links to where it came from. Anything no
 | Place | Tier | Source | Can we use it? | Plan |
 |---|---|---|---|---|
 | London | 2 Authority (and ELM jama'ah) | London Unified Prayer Timetable API | Good fit: start times, jama'ah times and both Asr times. **Permission granted by email, 25 Oct 2026** (see below). | Our daily API job fetches it with the key kept secret. |
-| Saudi Arabia (Riyadh) | 2 Authority | Umm al-Qura Calendar (KACST) | No API. The terms don't grant reuse. The site says its times are **calculations** to the Umm al-Qura standard. | Calculate on the phone with the same method, then check it against the official CSV export. |
+| Saudi Arabia (173 cities) | 2 Authority | Umm al-Qura Calendar (KACST) | **Permission granted by KACST, 25 Oct 2026**, to retrieve the times from the website automatically. | Yearly job reads every city's official table into our API. A labelled calculation (within 1 minute) is the fallback. |
 | Any mosque | 1 Mosque | Mawaqit, Masjidbox, MyMasjid | No public API for any of them. | Only mosques that give us permission and a feed. |
 | Everywhere else | 3 Calculated | `adhan_dart` library (MIT) | Yes | Labelled "Calculated". |
 
@@ -44,8 +44,14 @@ Researched 25 October 2026. Every claim links to where it came from. Anything no
   - That needs the official rounding: prayers **up** to the next minute, sunrise **down**. Rounding to the nearest minute matched only about 50%, with some 2-minute gaps.
   - The remaining ±1 minute (mostly Fajr and Asr) goes both ways, so their astronomical code differs slightly. It isn't published for reuse, so we don't copy it.
   - **Hijri dates:** the `hijri` library matched the official date on all 365 days.
-- **Decision:** Saudi times are calculated on the phone and **labelled "Calculated on this phone (Umm al-Qura method)"**, never as the official timetable, because they are not minute-exact.
+- **Decision (updated after KACST's permission, below):** Saudi times come from the **official Umm al-Qura tables** through our API, credited "Umm al-Qura Calendar". Our own calculation is only the fallback, and it is **labelled "Calculated on this phone (Umm al-Qura method)"** because it is not minute-exact.
 - **To get exact official times:** ask KACST through the site's contact form for permission to republish its timetable through our API, as was done for London.
+- **Permission:** we asked KACST, through the site's contact form, to use and republish the site's prayer times for app users, with the credit "Source: Umm al-Qura Calendar". KACST replied on 25 October 2026 giving permission, and said to retrieve the times automatically from the website (rather than through an API or a data file). Keep that email; it's our record of permission.
+- **How we retrieve them:** `tool/fetch_umm_al_qura.dart`, run once a year by GitHub Actions.
+  - A hidden Chrome opens each of the site's 173 cities (`/en/prayer-times/<city>`), chooses Gregorian and Year view, and reads the table, one city at a time with pauses.
+  - Every row is checked: real date, matching weekday (so a wrong year is caught), 24-hour times in order, and a complete year.
+  - The page heading must name the right city, because an unknown address silently shows Makkah instead.
+- **Check, 25 October 2026:** the job's Riyadh 2026 table matched the one copied by hand from the site on 364 of 365 days. The one difference, 28 December Dhuhr (11:55 against 11:56), is the site's own calculation landing on a minute boundary: two different browsers round it differently. The job uses a current standard Chrome, like most visitors.
 - **Jama'ah (iqamah):** no official nationwide schedule found. The rules found were local or temporary: Makkah during Hajj ([Bernama](https://www.bernama.com/en/news.php?id=2559338)), Ramadan Fajr and Isha ([Gulf News](https://gulfnews.com/world/gulf/saudi/saudi-arabia-orders-reduction-of-adhan-iqama-gap-to-10-minutes-for-fajr-and-isha-prayers-in-ramadan-1.94712564)). **Decision: Saudi times show the start (adhan) time only.**
 
 ## Mosque platforms

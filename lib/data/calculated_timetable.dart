@@ -127,23 +127,11 @@ DayTimes _calculateDay(
     Prayer.maghrib: up(times.maghrib),
     Prayer.isha: up(isha),
   };
-  _checkInOrder(date, start);
-  return DayTimes(start: start, asrHanafi: up(timesWith(hanafi).asr));
-}
-
-/// Throws [CalculationUnavailable] unless the day's times rise from Fajr to
-/// Isha. "HH:mm" text sorts like the times, so an Isha after midnight
-/// ("00:00") shows up as out of order.
-void _checkInOrder(DateTime date, Map<Prayer, String> start) {
-  final times = [for (final prayer in Prayer.values) start[prayer] ?? ''];
-  for (var i = 1; i < times.length; i++) {
-    if (times[i].compareTo(times[i - 1]) <= 0) {
-      throw CalculationUnavailable(
-        '${_isoDate(date)}: ${Prayer.values[i].name} (${times[i]}) is not '
-        'after ${Prayer.values[i - 1].name} (${times[i - 1]})',
-      );
-    }
+  // E.g. an Isha after midnight ("00:00") would come before Maghrib.
+  if (!startTimesInOrder(start)) {
+    throw CalculationUnavailable('${_isoDate(date)}: out of order: $start');
   }
+  return DayTimes(start: start, asrHanafi: up(timesWith(hanafi).asr));
 }
 
 adhan.CalculationParameters _parameters(
