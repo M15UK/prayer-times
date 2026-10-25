@@ -8,6 +8,10 @@ library;
 /// The times a timetable lists, in the order they happen in a day.
 enum Prayer { fajr, sunrise, dhuhr, asr, maghrib, isha }
 
+/// Which Asr time to use. Standard (Shafi'i, Maliki, Hanbali) is earlier;
+/// Hanafi is later.
+enum AsrMethod { standard, hanafi }
+
 final _clockTime = RegExp(r'^([01]\d|2[0-3]):[0-5]\d$');
 
 /// True for a 24-hour "HH:mm" time such as "05:04" or "18:17".
@@ -52,6 +56,13 @@ class DayTimes {
 
   /// Congregation times, when the source publishes them.
   final Map<Prayer, String> jamaah;
+
+  /// The start time of [prayer], using the Hanafi Asr time when [asr] asks
+  /// for it and the source publishes one.
+  String? startOf(Prayer prayer, AsrMethod asr) =>
+      prayer == Prayer.asr && asr == AsrMethod.hanafi
+      ? asrHanafi ?? start[prayer]
+      : start[prayer];
 
   Map<String, Object> toJson() => {
     'start': _prayerTimesToJson(start),

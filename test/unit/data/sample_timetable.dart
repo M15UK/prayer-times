@@ -1,7 +1,7 @@
 import 'package:prayer_times/data/timetable.dart';
 
-/// A one-day timetable for tests: London's real times for 25 October 2026,
-/// checked against londonprayertimes.com.
+/// A two-day timetable for tests: London's real times for 25 and 26 October
+/// 2026 (25 October checked against londonprayertimes.com).
 Timetable sampleTimetable({
   String sourceName = 'London Unified Prayer Timetable (East London Mosque)',
 }) => Timetable(
@@ -24,6 +24,24 @@ Timetable sampleTimetable({
         Prayer.dhuhr: '12:45',
         Prayer.asr: '15:15',
         Prayer.maghrib: '16:57',
+        Prayer.isha: '19:30',
+      },
+    ),
+    '2026-10-26': DayTimes(
+      start: {
+        Prayer.fajr: '05:05',
+        Prayer.sunrise: '06:41',
+        Prayer.dhuhr: '11:50',
+        Prayer.asr: '14:15',
+        Prayer.maghrib: '16:48',
+        Prayer.isha: '18:15',
+      },
+      asrHanafi: '14:55',
+      jamaah: {
+        Prayer.fajr: '05:25',
+        Prayer.dhuhr: '12:45',
+        Prayer.asr: '15:15',
+        Prayer.maghrib: '16:55',
         Prayer.isha: '19:30',
       },
     ),

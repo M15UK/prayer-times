@@ -4,8 +4,53 @@
   "@appTitle": {
     "description": "App name, shown in the top bar and the phone's app switcher."
   },
-  "todayPlaceholder": "Today's prayer times will appear here.",
-  "@todayPlaceholder": {
-    "description": "Temporary home screen text until the times screen is built in Step 5."
-  }
+  "prayerFajr": "Fajr",
+  "prayerSunrise": "Sunrise",
+  "prayerDhuhr": "Dhuhr",
+  "prayerAsr": "Asr",
+  "prayerMaghrib": "Maghrib",
+  "prayerIsha": "Isha",
+  "startHeader": "Start",
+  "@startHeader": {
+    "description": "Column heading: when the prayer time begins (adhan)."
+  },
+  "jamaahHeader": "Jama'ah",
+  "@jamaahHeader": {
+    "description": "Column heading: when the congregation prays (iqamah)."
+  },
+  "settings": "Settings",
+  "asrTime": "Asr time",
+  "asrStandard": "Standard (Shafi'i, Maliki, Hanbali)",
+  "asrStandardHint": "The earlier Asr time",
+  "asrHanafiOption": "Hanafi",
+  "asrHanafiHint": "The later Asr time",
+  "nextPrayerIn": "{prayer} in {countdown}",
+  "@nextPrayerIn": {
+    "description": "Countdown to the next prayer.",
+    "placeholders": {
+      "prayer": {"type": "String", "example": "Asr"},
+      "countdown": {"type": "String", "example": "2:08:05"}
+    }
+  },
+  "source": "Source: {name}",
+  "@source": {
+    "description": "Where the times on screen came from.",
+    "placeholders": {"name": {"type": "String"}}
+  },
+  "hijriDate": "{day} {month} {year} AH",
+  "@hijriDate": {
+    "placeholders": {
+      "day": {"type": "int"},
+      "month": {"type": "String", "example": "Jumada al-Ula"},
+      "year": {"type": "int"}
+    }
+  },
+  "hijriMonth": "{month, select, m1{Muharram} m2{Safar} m3{Rabi al-Awwal} m4{Rabi al-Thani} m5{Jumada al-Ula} m6{Jumada al-Akhirah} m7{Rajab} m8{Sha'ban} m9{Ramadan} m10{Shawwal} m11{Dhu al-Qa'dah} m12{Dhu al-Hijjah} other{}}",
+  "@hijriMonth": {
+    "description": "Hijri month name; month is m1 to m12.",
+    "placeholders": {"month": {"type": "String"}}
+  },
+  "ummAlQuraCalendar": "Umm al-Qura calendar",
+  "loadFailed": "Couldn't load prayer times. Check your internet connection and try again.",
+  "retry": "Try again"
 }
