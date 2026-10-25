@@ -36,6 +36,11 @@ jobs:
       # Fetch nothing if our reader's own tests fail.
       - run: flutter test test/unit
 
+      # Ubuntu 24.04 blocks the user namespaces Chrome's sandbox needs. Allow
+      # them on this throwaway machine, so Chrome keeps its sandbox on.
+      - name: Let Chrome use its sandbox
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
       # About an hour: one city at a time, with pauses, to go easy on the site.
       # Any unexpected page stops the job, and nothing is committed.
       - name: Fetch every city, this year and next
