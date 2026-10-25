@@ -22,7 +22,8 @@ flutter test
 |---|---|
 | `lib/main.dart` | The app's starting point |
 | `lib/l10n/` | English and Arabic text (`.arb` files) and the code Flutter makes from them |
-| `lib/data/timetable.dart` | The timetable format shared by our API and the app |
+| `lib/data/timetable.dart` | The timetable format shared by our API and the app, with its checks |
+| `lib/data/timetable_repository.dart` | Downloads timetables and keeps a copy on the phone for offline use |
 | `tool/build_api.dart` | Our daily job: fetches official timetables, checks them and writes our API files |
 | `.github/workflows/api.yml` | Runs that job every day and publishes the files on GitHub Pages |
 | `test/unit/` | Tests for logic with no screens |

@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Downloads timetables from our API. Debug builds get this
+         automatically; release builds need it declared here. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="prayer_times"
         android:name="${applicationName}"
