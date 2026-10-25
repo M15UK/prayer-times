@@ -15,7 +15,13 @@ Researched 25 October 2026. Every claim links to where it came from. Anything no
 
 - **What it is:** a shared timetable used by East London Mosque, London Central Mosque, Croydon ICT and others. "Times sourced from East London Mosque. We publish the official timetable without modification." Jama'ah times "reflect East London Mosque." ([site](https://www.londonprayertimes.com/))
 - **API:** `GET https://www.londonprayertimes.com/api/times/?format=json&key=...`, with optional `date`, `year`, `month`, `city=london` and `24hours=true`. One date or a whole month per call. You request a key through a form, and they reply "normally within 4 hours" ([API page](https://www.londonprayertimes.com/api/)).
-- **Response fields**, from the documented sample: `fajr`, `fajr_jamat`, `sunrise`, `dhuhr`, `dhuhr_jamat`, `asr`, `asr_2`, `asr_jamat`, `magrib` (spelt that way), `magrib_jamat`, `isha`, `isha_jamat`. So **jama'ah times and both Asr times are included**. `asr` is the earlier one (Shafi'i) and `asr_2` the later one (Hanafi); that's inferred from the order and still to be confirmed with real data.
+- **Response fields**, from the documented sample: `fajr`, `fajr_jamat`, `sunrise`, `dhuhr`, `dhuhr_jamat`, `asr`, `asr_2`, `asr_jamat`, `magrib` (spelt that way), `magrib_jamat`, `isha`, `isha_jamat`. So **jama'ah times and both Asr times are included**.
+- **Confirmed with the real 2026 data** (fetched 25 October 2026, all 365 days passed our checks):
+  - `asr` (Shafi'i) is earlier than `asr_2` (Hanafi) on every day.
+  - Times are local clock times: Dhuhr jumps 12:11 → 13:10 on 29 March and 12:50 → 11:50 on 25 October.
+  - Isha never passes midnight. The latest Isha is 22:45 and the latest Isha jama'ah is 23:00 (summer).
+  - A year that isn't published yet (2027) returns an empty `times`.
+  - The API returned HTTP 500 once, and the same request worked when repeated.
 - **Things to watch:**
   - Always send `24hours=true`. Without it, times come back in 12-hour format with no am/pm (e.g. `"dhuhr":"01:10"`).
   - The sample values are placeholders. The "2026-10-25" sample shows July times, so don't use them as test data.
