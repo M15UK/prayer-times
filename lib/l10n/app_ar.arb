@@ -10,6 +10,8 @@
   "startHeader": "الأذان",
   "jamaahHeader": "الإقامة",
   "settings": "الإعدادات",
+  "language": "اللغة",
+  "languagePhone": "لغة الجهاز",
   "asrTime": "وقت العصر",
   "asrStandard": "الجمهور (الشافعي والمالكي والحنبلي)",
   "asrStandardHint": "وقت العصر الأبكر",

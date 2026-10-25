@@ -40,6 +40,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings => 'Settings';
 
   @override
+  String get language => 'Language';
+
+  @override
+  String get languagePhone => 'Phone\'s language';
+
+  @override
   String get asrTime => 'Asr time';
 
   @override

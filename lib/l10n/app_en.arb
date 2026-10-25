@@ -19,6 +19,8 @@
     "description": "Column heading: when the congregation prays (iqamah)."
   },
   "settings": "Settings",
+  "language": "Language",
+  "languagePhone": "Phone's language",
   "asrTime": "Asr time",
   "asrStandard": "Standard (Shafi'i, Maliki, Hanbali)",
   "asrStandardHint": "The earlier Asr time",

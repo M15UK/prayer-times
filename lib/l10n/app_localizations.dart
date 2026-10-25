@@ -158,6 +158,18 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settings;
 
+  /// No description provided for @language.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get language;
+
+  /// No description provided for @languagePhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone\'s language'**
+  String get languagePhone;
+
   /// No description provided for @asrTime.
   ///
   /// In en, this message translates to:
