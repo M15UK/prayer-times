@@ -89,7 +89,8 @@ class TimetableRepository {
       '${file.path}.$pid-${DateTime.now().microsecondsSinceEpoch}.tmp',
     );
     try {
-      await cacheDir.create(recursive: true);
+      // The file's own folder: "saudi/1001-2026.json" lives in "saudi/".
+      await file.parent.create(recursive: true);
       await temporary.writeAsString(body, flush: true);
       await temporary.rename(file.path);
     } on FileSystemException catch (error) {

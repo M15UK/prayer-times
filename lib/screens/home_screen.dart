@@ -8,7 +8,9 @@ import 'package:prayer_times/data/prayer_clock.dart';
 import 'package:prayer_times/data/timetable.dart';
 import 'package:prayer_times/l10n/app_language.dart';
 import 'package:prayer_times/l10n/app_localizations.dart';
+import 'package:prayer_times/l10n/prayer_name.dart';
 import 'package:prayer_times/screens/settings_screen.dart';
+import 'package:prayer_times/screens/times_table.dart';
 
 /// Today's prayer times, a countdown to the next prayer, the Gregorian and
 /// Hijri dates, and where the times came from.
@@ -136,7 +138,7 @@ class _TodayView extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               child: Text(
                 text.nextPrayerIn(
-                  _prayerName(text, next.prayer),
+                  prayerName(text, next.prayer),
                   formatCountdown(next.at.difference(now)),
                 ),
                 style: Theme.of(context).textTheme.headlineSmall,
@@ -147,7 +149,7 @@ class _TodayView extends StatelessWidget {
         const SizedBox(height: 16),
         _Dates(date: DateTime.parse(today)),
         const SizedBox(height: 16),
-        _TimesTable(
+        TimesTable(
           day: day,
           asr: asr,
           highlight: nextToday ? next.prayer : null,
@@ -228,75 +230,6 @@ class _Dates extends StatelessWidget {
   }
 }
 
-/// One row per time: the prayer, its start time and its jama'ah time.
-class _TimesTable extends StatelessWidget {
-  const _TimesTable({
-    required this.day,
-    required this.asr,
-    required this.highlight,
-  });
-
-  final DayTimes day;
-  final AsrMethod asr;
-  final Prayer? highlight;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final heading = theme.textTheme.labelLarge;
-
-    TableRow row(List<Widget> cells, {bool highlighted = false}) => TableRow(
-      decoration: highlighted
-          ? BoxDecoration(
-              color: theme.colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(8),
-            )
-          : null,
-      children: [
-        for (final cell in cells)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-            child: cell,
-          ),
-      ],
-    );
-
-    return Table(
-      columnWidths: const {0: FlexColumnWidth(2)},
-      children: [
-        // Screen readers hear each heading with its time instead (_TimeCell).
-        row([
-          const SizedBox.shrink(),
-          ExcludeSemantics(child: Text(text.startHeader, style: heading)),
-          ExcludeSemantics(child: Text(text.jamaahHeader, style: heading)),
-        ]),
-        for (final prayer in Prayer.values)
-          row(highlighted: prayer == highlight, [
-            Text(_prayerName(text, prayer), style: theme.textTheme.titleMedium),
-            _TimeCell(time: day.startOf(prayer, asr), column: text.startHeader),
-            _TimeCell(time: day.jamaah[prayer], column: text.jamaahHeader),
-          ]),
-      ],
-    );
-  }
-}
-
-/// A time that screen readers announce with its column, e.g. "Start 05:04".
-/// A missing time shows "—", which screen readers skip.
-class _TimeCell extends StatelessWidget {
-  const _TimeCell({required this.time, required this.column});
-
-  final String? time;
-  final String column;
-
-  @override
-  Widget build(BuildContext context) => switch (time) {
-    final time? => Text(time, semanticsLabel: '$column $time'),
-    null => const ExcludeSemantics(child: Text('—')),
-  };
-}
-
 class _LoadFailed extends StatelessWidget {
   const _LoadFailed({required this.onRetry});
 
@@ -320,14 +253,3 @@ class _LoadFailed extends StatelessWidget {
     );
   }
 }
-
-/// A Dart 3 switch over an enum: the compiler insists every prayer is
-/// covered, so a new one can never be left without a name.
-String _prayerName(AppLocalizations text, Prayer prayer) => switch (prayer) {
-  Prayer.fajr => text.prayerFajr,
-  Prayer.sunrise => text.prayerSunrise,
-  Prayer.dhuhr => text.prayerDhuhr,
-  Prayer.asr => text.prayerAsr,
-  Prayer.maghrib => text.prayerMaghrib,
-  Prayer.isha => text.prayerIsha,
-};
