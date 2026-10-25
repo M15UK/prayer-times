@@ -209,8 +209,14 @@ abstract class AppLocalizations {
   /// No description provided for @calculationUnavailable.
   ///
   /// In en, this message translates to:
-  /// **'Prayer times can\'t be calculated this close to the poles. Please choose a place.'**
+  /// **'Prayer times can\'t be calculated for where you are (for example, very near the poles). Please choose a place.'**
   String get calculationUnavailable;
+
+  /// No description provided for @loadingTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading prayer times'**
+  String get loadingTimes;
 
   /// No description provided for @hanafiNotPublished.
   ///

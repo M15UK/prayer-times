@@ -1,6 +1,7 @@
 /// The only code that talks to the phone's location and time zone. It has
 /// no logic of its own, so everything else can be tested with fakes. The
-/// position never leaves the phone.
+/// exact position never leaves the phone (only the nearest official
+/// place's timetable is downloaded).
 library;
 
 import 'dart:async';
@@ -18,6 +19,22 @@ const _fixTimeout = Duration(seconds: 10);
 /// if needed. Null if permission is refused, location is switched off, or
 /// no fix comes in time and the phone remembers none.
 Future<GeoPoint?> approximatePosition() async {
+  try {
+    return await _approximatePosition();
+  } on LocationServiceDisabledException {
+    return null; // switched off while waiting for a fix
+  } on PermissionDeniedException {
+    return null;
+  } on PermissionRequestInProgressException {
+    return null;
+  } on ActivityMissingException {
+    return null;
+  } on PositionUpdateException {
+    return null;
+  }
+}
+
+Future<GeoPoint?> _approximatePosition() async {
   if (!await Geolocator.isLocationServiceEnabled()) return null;
   final current = await Geolocator.checkPermission();
   final permission = current == LocationPermission.denied

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' show log;
 
 import 'package:flutter/material.dart';
 import 'package:hijri/hijri_calendar.dart';
@@ -61,10 +62,20 @@ class _HomeScreenState extends State<HomeScreen> {
   /// Redraws the screen every second, for the countdown.
   late final Timer _ticker;
 
-  /// Starts loading. The screen shows any error; ignore() only stops it
-  /// counting as "unhandled" in the moment before the screen listens.
-  Future<ResolvedTimes> _load() =>
-      widget.loadTimes(widget.place.value, widget.now())..ignore();
+  /// Starts loading. The screen shows any error; it is also logged, so an
+  /// unexpected one is never invisible (and never counts as "unhandled" in
+  /// the moment before the screen listens).
+  Future<ResolvedTimes> _load() {
+    final times = widget.loadTimes(widget.place.value, widget.now());
+    unawaited(
+      times.then<void>(
+        (_) {},
+        onError: (Object error, StackTrace stack) =>
+            log('Loading prayer times failed', error: error, stackTrace: stack),
+      ),
+    );
+    return times;
+  }
 
   @override
   void initState() {
@@ -78,7 +89,9 @@ class _HomeScreenState extends State<HomeScreen> {
       // First run and no location: go straight to the place list.
       unawaited(
         _times.then<void>(
-          (_) {},
+          // It worked: save "automatic" (a SavedPlace saves on every set),
+          // so later launches aren't treated as the first.
+          (_) => widget.place.value = widget.place.value,
           onError: (Object error) {
             if (error is LocationUnavailable && mounted) {
               unawaited(_openPlaces());
@@ -121,6 +134,46 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
   );
 
+  /// What to show while loading, with times, or with a message instead.
+  Widget _content(BuildContext context, AsyncSnapshot<ResolvedTimes> loaded) {
+    final text = AppLocalizations.of(context);
+    return switch (loaded) {
+      AsyncSnapshot(connectionState: ConnectionState.waiting) => Center(
+        child: CircularProgressIndicator(
+          semanticsLabel:
+              text.loadingTimes, // finding a location can take a while
+        ),
+      ),
+      // Redraws whenever the Asr setting changes (and every second).
+      AsyncSnapshot(:final data?) => ValueListenableBuilder(
+        valueListenable: widget.asrMethod,
+        builder: (context, asr, _) => _TodayView(
+          times: data,
+          automatic: widget.place.value == null,
+          now: widget.now(),
+          asr: asr,
+          onRetry: _reload,
+          onChangePlace: _openPlaces,
+        ),
+      ),
+      AsyncSnapshot(error: LocationUnavailable()) => _Notice(
+        message: text.locationUnavailable,
+        action: text.choosePlace,
+        onPressed: _openPlaces,
+      ),
+      AsyncSnapshot(error: CalculationUnavailable()) => _Notice(
+        message: text.calculationUnavailable,
+        action: text.choosePlace,
+        onPressed: _openPlaces,
+      ),
+      _ => _Notice(
+        message: text.loadFailed,
+        action: text.retry,
+        onPressed: _reload,
+      ),
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
@@ -135,40 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: FutureBuilder(
-        future: _times,
-        builder: (context, loaded) => switch (loaded) {
-          AsyncSnapshot(connectionState: ConnectionState.waiting) =>
-            const Center(child: CircularProgressIndicator()),
-          // Redraws whenever the Asr setting changes (and every second).
-          AsyncSnapshot(:final data?) => ValueListenableBuilder(
-            valueListenable: widget.asrMethod,
-            builder: (context, asr, _) => _TodayView(
-              times: data,
-              automatic: widget.place.value == null,
-              now: widget.now(),
-              asr: asr,
-              onRetry: _reload,
-              onChangePlace: _openPlaces,
-            ),
-          ),
-          AsyncSnapshot(error: LocationUnavailable()) => _Notice(
-            message: text.locationUnavailable,
-            action: text.choosePlace,
-            onPressed: _openPlaces,
-          ),
-          AsyncSnapshot(error: CalculationUnavailable()) => _Notice(
-            message: text.calculationUnavailable,
-            action: text.choosePlace,
-            onPressed: _openPlaces,
-          ),
-          _ => _Notice(
-            message: text.loadFailed,
-            action: text.retry,
-            onPressed: _reload,
-          ),
-        },
-      ),
+      body: FutureBuilder(future: _times, builder: _content),
     );
   }
 }
@@ -218,19 +238,7 @@ class _TodayView extends StatelessWidget {
           onPressed: onChangePlace,
         ),
         if (next != null)
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Text(
-                text.nextPrayerIn(
-                  prayerName(text, next.prayer),
-                  formatCountdown(next.at.difference(now)),
-                ),
-                style: Theme.of(context).textTheme.headlineSmall,
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
+          _Countdown(prayer: next.prayer, left: next.at.difference(now)),
         const SizedBox(height: 16),
         _Dates(date: DateTime.parse(today)),
         const SizedBox(height: 16),
@@ -245,6 +253,29 @@ class _TodayView extends StatelessWidget {
         const SizedBox(height: 16),
         _SourceLabel(timetable: timetable),
       ],
+    );
+  }
+}
+
+/// "Asr in 2:08:05": the next prayer and the time left until it starts.
+class _Countdown extends StatelessWidget {
+  const _Countdown({required this.prayer, required this.left});
+
+  final Prayer prayer;
+  final Duration left;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = AppLocalizations.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Text(
+          text.nextPrayerIn(prayerName(text, prayer), formatCountdown(left)),
+          style: Theme.of(context).textTheme.headlineSmall,
+          textAlign: TextAlign.center,
+        ),
+      ),
     );
   }
 }
@@ -276,7 +307,11 @@ class _PlaceButton extends StatelessWidget {
         message: text.location,
         child: TextButton.icon(
           onPressed: onPressed,
-          icon: Icon(icon),
+          // Screen readers hear "Use my location" for automatic mode.
+          icon: Icon(
+            icon,
+            semanticLabel: automatic ? text.useMyLocation : null,
+          ),
           label: Text(place?.nameFor(text.localeName) ?? text.yourLocation),
         ),
       ),

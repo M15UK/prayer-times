@@ -66,7 +66,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get calculationUnavailable =>
-      'لا يمكن حساب مواقيت الصلاة بهذا القرب من القطبين. يُرجى اختيار مكان.';
+      'لا يمكن حساب مواقيت الصلاة لمكانك (مثل المناطق القريبة جدًا من القطبين). يُرجى اختيار مكان.';
+
+  @override
+  String get loadingTimes => 'جارٍ تحميل مواقيت الصلاة';
 
   @override
   String get hanafiNotPublished => 'هذا الجدول ينشر وقت العصر عند الجمهور فقط.';

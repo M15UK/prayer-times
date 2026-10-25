@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Your approximate location finds the nearest official prayer timetable. It never leaves your phone.</string>
+	<string>Your approximate location finds the nearest official prayer timetable. Your exact position never leaves your phone.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>

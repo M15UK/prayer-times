@@ -150,6 +150,18 @@ void main() {
       expect(calculatedMethodOf(times.timetable), CalculatedMethod.ummAlQura);
     });
 
+    test('with a time zone the app does not know, says calculation is '
+        'unavailable', () {
+      expect(
+        load(
+          chosen: null,
+          position: (latitude: 53.4808, longitude: -2.2426),
+          zone: 'Not/AZone',
+        ),
+        throwsA(isA<CalculationUnavailable>()),
+      );
+    });
+
     test('in the Arctic, says calculation is unavailable', () {
       expect(
         load(

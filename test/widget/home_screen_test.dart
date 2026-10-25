@@ -1,12 +1,15 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
 import 'package:prayer_times/data/calculated_timetable.dart';
 import 'package:prayer_times/data/place.dart';
 import 'package:prayer_times/data/place_times.dart';
+import 'package:prayer_times/data/saved_place.dart';
 import 'package:prayer_times/data/timetable.dart';
 import 'package:prayer_times/l10n/app_language.dart';
 import 'package:prayer_times/l10n/app_localizations.dart';
@@ -265,6 +268,30 @@ void main() {
     semantics.dispose();
   });
 
+  testWidgets('tells screen readers it is loading', (tester) async {
+    final semantics = tester.ensureSemantics();
+    final loading = Completer<ResolvedTimes>();
+
+    await pumpHome(tester, loadTimes: (_, _) => loading.future);
+
+    expect(find.bySemanticsLabel('Loading prayer times'), findsOneWidget);
+    semantics.dispose();
+  });
+
+  testWidgets('tells screen readers when the place is automatic', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+
+    await pumpHome(
+      tester,
+      place: ValueNotifier(null),
+      loadTimes: showing(sampleTimetable()),
+    );
+    expect(find.bySemanticsLabel(RegExp('Use my location')), findsOneWidget);
+    semantics.dispose();
+  });
+
   group('when there are no times', () {
     testWidgets('explains a missing location and offers the place list', (
       tester,
@@ -307,6 +334,19 @@ void main() {
       await finishTransition(tester);
 
       expect(find.text('Use my location'), findsOneWidget);
+    });
+
+    testWidgets('a first launch that works is remembered as automatic', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({});
+      final storage = await SharedPreferences.getInstance();
+      final saved = SavedPlace(storage, places: samplePlaces);
+
+      await pumpHome(tester, place: saved, isFirstLaunch: saved.isFirstLaunch);
+
+      // So the next launch is not a "first launch" again.
+      expect(storage.getString('place'), 'automatic');
     });
 
     testWidgets('but not on later launches', (tester) async {

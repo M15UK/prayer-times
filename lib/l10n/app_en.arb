@@ -27,7 +27,8 @@
   "noPlacesFound": "No places match",
   "choosePlace": "Choose a place",
   "locationUnavailable": "Couldn't find your location. Allow location access, or choose a place.",
-  "calculationUnavailable": "Prayer times can't be calculated this close to the poles. Please choose a place.",
+  "calculationUnavailable": "Prayer times can't be calculated for where you are (for example, very near the poles). Please choose a place.",
+  "loadingTimes": "Loading prayer times",
   "hanafiNotPublished": "This timetable only publishes the standard Asr time.",
   "sourceUmmAlQura": "Umm al-Qura Calendar",
   "@sourceUmmAlQura": {

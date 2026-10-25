@@ -67,7 +67,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calculationUnavailable =>
-      'Prayer times can\'t be calculated this close to the poles. Please choose a place.';
+      'Prayer times can\'t be calculated for where you are (for example, very near the poles). Please choose a place.';
+
+  @override
+  String get loadingTimes => 'Loading prayer times';
 
   @override
   String get hanafiNotPublished =>

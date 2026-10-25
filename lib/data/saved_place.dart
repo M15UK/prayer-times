@@ -15,7 +15,8 @@ class SavedPlace extends ValueNotifier<Place?> {
 
   final SharedPreferences _storage;
 
-  /// True if no choice has ever been saved: the app's very first run.
+  /// True if no choice has been saved yet (the main screen saves automatic
+  /// after the first load that works).
   final bool isFirstLaunch;
 
   static const _key = 'place';

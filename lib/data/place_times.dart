@@ -49,6 +49,10 @@ Future<ResolvedTimes> loadPlaceTimes({
     );
   }
   final zone = await timeZoneName();
+  // Local clock times need the zone's rules; without them, don't guess.
+  if (!tz.timeZoneDatabase.locations.containsKey(zone)) {
+    throw CalculationUnavailable('Unknown time zone "$zone"');
+  }
   final calculated = calculateTimetable(
     latitude: position.latitude,
     longitude: position.longitude,
