@@ -219,7 +219,10 @@ Future<String> _fetch(Uri url) async {
         .join()
         .timeout(_requestTimeout);
     if (response.statusCode != HttpStatus.ok) {
-      throw HttpException('HTTP ${response.statusCode}', uri: safeUrl);
+      throw HttpException(
+        'HTTP ${response.statusCode}: ${_preview(body)}',
+        uri: safeUrl,
+      );
     }
     return body;
   } on HttpException catch (error) {
