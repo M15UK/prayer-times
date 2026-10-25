@@ -64,6 +64,11 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  # The Saudi city list (written by tool/fetch_umm_al_qura.dart), built in
+  # so choosing a place works offline.
+  assets:
+    - api/v1/saudi/cities.json
+
   # Generates the AppLocalizations class from lib/l10n/*.arb (see l10n.yaml).
   generate: true
 

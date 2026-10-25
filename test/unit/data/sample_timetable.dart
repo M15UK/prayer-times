@@ -1,5 +1,26 @@
 import 'package:prayer_times/data/timetable.dart';
 
+/// A one-day official Saudi timetable for tests: Riyadh's real times for
+/// 25 October 2026 from the Umm al-Qura Calendar. Like every Saudi
+/// timetable, it has no jama'ah times and no Hanafi Asr.
+Timetable sampleSaudiTimetable() => const Timetable(
+  sourceId: 'umm-al-qura',
+  sourceName: 'Umm al-Qura Calendar',
+  timeZone: 'Asia/Riyadh',
+  days: {
+    '2026-10-25': DayTimes(
+      start: {
+        Prayer.fajr: '04:38',
+        Prayer.sunrise: '05:56',
+        Prayer.dhuhr: '11:38',
+        Prayer.asr: '14:53',
+        Prayer.maghrib: '17:19',
+        Prayer.isha: '18:49',
+      },
+    ),
+  },
+);
+
 /// A two-day timetable for tests: London's real times for 25 and 26 October
 /// 2026 (25 October checked against londonprayertimes.com).
 Timetable sampleTimetable({

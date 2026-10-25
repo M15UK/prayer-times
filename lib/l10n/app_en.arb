@@ -19,6 +19,20 @@
     "description": "Column heading: when the congregation prays (iqamah)."
   },
   "settings": "Settings",
+  "location": "Location",
+  "yourLocation": "Your location",
+  "useMyLocation": "Use my location",
+  "useMyLocationHint": "The nearest official timetable, or times calculated for where you are",
+  "searchPlaces": "Search for a city or mosque",
+  "noPlacesFound": "No places match",
+  "choosePlace": "Choose a place",
+  "locationUnavailable": "Couldn't find your location. Allow location access, or choose a place.",
+  "calculationUnavailable": "Prayer times can't be calculated this close to the poles. Please choose a place.",
+  "hanafiNotPublished": "This timetable only publishes the standard Asr time.",
+  "sourceUmmAlQura": "Umm al-Qura Calendar",
+  "@sourceUmmAlQura": {
+    "description": "The credit agreed with KACST for official Saudi times. Keep the capital C."
+  },
   "language": "Language",
   "languagePhone": "Phone's language",
   "asrTime": "Asr time",

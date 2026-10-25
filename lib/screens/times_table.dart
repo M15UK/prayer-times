@@ -22,6 +22,8 @@ class TimesTable extends StatelessWidget {
     final text = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final heading = theme.textTheme.labelLarge;
+    // Some sources (e.g. the Umm al-Qura Calendar) publish no jama'ah times.
+    final showJamaah = day.jamaah.isNotEmpty;
 
     TableRow row(List<Widget> cells, {bool highlighted = false}) => TableRow(
       decoration: highlighted
@@ -46,13 +48,15 @@ class TimesTable extends StatelessWidget {
         row([
           const SizedBox.shrink(),
           ExcludeSemantics(child: Text(text.startHeader, style: heading)),
-          ExcludeSemantics(child: Text(text.jamaahHeader, style: heading)),
+          if (showJamaah)
+            ExcludeSemantics(child: Text(text.jamaahHeader, style: heading)),
         ]),
         for (final prayer in Prayer.values)
           row(highlighted: prayer == highlight, [
             Text(prayerName(text, prayer), style: theme.textTheme.titleMedium),
             _TimeCell(time: day.startOf(prayer, asr), column: text.startHeader),
-            _TimeCell(time: day.jamaah[prayer], column: text.jamaahHeader),
+            if (showJamaah)
+              _TimeCell(time: day.jamaah[prayer], column: text.jamaahHeader),
           ]),
       ],
     );
