@@ -131,6 +131,41 @@ void main() {
     expect(timetable?.sourceName, sampleTimetable().sourceName);
   });
 
+  test(
+    'saves and reuses a timetable kept in a sub-folder (a Saudi city)',
+    () async {
+      // Arrange: Riyadh lives at saudi/1001 in our API.
+      Future<Timetable?> loadRiyadh(
+        Future<HttpResult> Function(Uri url) fetch,
+      ) => TimetableRepository(
+        cacheDir: cacheDir,
+        fetch: fetch,
+      ).load(place: 'saudi/1001', year: 2026);
+      Uri? requested;
+
+      // Act: once online, then offline.
+      await loadRiyadh((url) async {
+        requested = url;
+        return (status: 200, body: validBody);
+      });
+      final saved = File('${cacheDir.path}/saudi/1001-2026.json');
+      await saved.setLastModified(
+        DateTime.now().subtract(const Duration(days: 3)),
+      );
+      final offline = await loadRiyadh(
+        (_) => throw const SocketException('No internet'),
+      );
+
+      // Assert
+      expect(
+        '$requested',
+        'https://m15uk.github.io/prayer-times/v1/saudi/1001/2026.json',
+      );
+      expect(saved.existsSync(), isTrue);
+      expect(offline, isNotNull);
+    },
+  );
+
   test('returns null when the year is not published yet', () async {
     final timetable = await load((_) async => (status: 404, body: ''));
 

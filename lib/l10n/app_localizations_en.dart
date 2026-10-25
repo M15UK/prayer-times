@@ -40,6 +40,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings => 'Settings';
 
   @override
+  String get location => 'Location';
+
+  @override
+  String get yourLocation => 'Your location';
+
+  @override
+  String get useMyLocation => 'Use my location';
+
+  @override
+  String get useMyLocationHint =>
+      'The nearest official timetable, or times calculated for where you are';
+
+  @override
+  String get searchPlaces => 'Search for a city or mosque';
+
+  @override
+  String get noPlacesFound => 'No places match';
+
+  @override
+  String get choosePlace => 'Choose a place';
+
+  @override
+  String get locationUnavailable =>
+      'Couldn\'t find your location. Allow location access, or choose a place.';
+
+  @override
+  String get calculationUnavailable =>
+      'Prayer times can\'t be calculated for where you are (for example, very near the poles). Please choose a place.';
+
+  @override
+  String get loadingTimes => 'Loading prayer times';
+
+  @override
+  String get hanafiNotPublished =>
+      'This timetable only publishes the standard Asr time.';
+
+  @override
+  String get sourceUmmAlQura => 'Umm al-Qura Calendar';
+
+  @override
   String get language => 'Language';
 
   @override

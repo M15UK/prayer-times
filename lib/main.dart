@@ -1,12 +1,16 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
-import 'package:timezone/timezone.dart' as tz;
 
-import 'package:prayer_times/data/calculated_timetable.dart';
+import 'package:prayer_times/data/device_location.dart';
+import 'package:prayer_times/data/place.dart';
+import 'package:prayer_times/data/place_times.dart';
+import 'package:prayer_times/data/saved_place.dart';
 import 'package:prayer_times/data/saved_setting.dart';
 import 'package:prayer_times/data/timetable.dart';
 import 'package:prayer_times/data/timetable_repository.dart';
@@ -24,26 +28,25 @@ Future<void> main() async {
   final repository = TimetableRepository(
     cacheDir: Directory('${supportDir.path}/timetables'),
   );
-  // shortcut: London only until Step 6 adds choosing a location.
-  final london = tz.getLocation('Europe/London');
+  // The Saudi city list is built into the app, so choosing works offline.
+  final places = parsePlaces(
+    jsonDecode(await rootBundle.loadString('api/v1/saudi/cities.json')),
+  );
   final storage = await SharedPreferences.getInstance();
+  final place = SavedPlace(storage, places: places);
   runApp(
     PrayerTimesApp(
-      loadTimetable: (now) async {
-        // London's year, not the phone's: at 20:00 on 31 December in New
-        // York it is already the new year in London.
-        final year = tz.TZDateTime.from(now, london).year;
-        // Official first; if there is none (offline with nothing saved, or
-        // not published yet), calculate, and the screen says so.
-        return await repository.load(place: 'london', year: year) ??
-            calculateTimetable(
-              latitude: 51.5072,
-              longitude: -0.1276,
-              timeZone: 'Europe/London',
-              year: year,
-              method: CalculatedMethod.muslimWorldLeague,
-            );
-      },
+      loadTimes: (chosen, now) => loadPlaceTimes(
+        chosen: chosen,
+        now: now,
+        places: places,
+        repository: repository,
+        locate: approximatePosition,
+        timeZoneName: phoneTimeZoneName,
+      ),
+      place: place,
+      places: places,
+      isFirstLaunch: place.isFirstLaunch,
       asrMethod: SavedSetting(
         storage,
         key: 'asrMethod',
@@ -63,17 +66,27 @@ Future<void> main() async {
 class PrayerTimesApp extends StatelessWidget {
   const PrayerTimesApp({
     super.key,
-    required this.loadTimetable,
+    required this.loadTimes,
+    required this.place,
+    required this.places,
     required this.asrMethod,
     required this.language,
+    this.isFirstLaunch = false,
   });
 
-  /// Loads the timetable covering a moment, or null if none is available.
-  final Future<Timetable?> Function(DateTime now) loadTimetable;
+  /// Loads the times for a chosen place (null: automatic) at a moment.
+  final Future<ResolvedTimes> Function(Place? chosen, DateTime now) loadTimes;
+
+  /// The saved choice of place, and every place offered.
+  final ValueNotifier<Place?> place;
+  final List<Place> places;
 
   /// The user's choices, shared by the main and settings screens.
   final ValueNotifier<AsrMethod> asrMethod;
   final ValueNotifier<AppLanguage> language;
+
+  /// True on the app's very first run.
+  final bool isFirstLaunch;
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +108,10 @@ class PrayerTimesApp extends StatelessWidget {
           brightness: Brightness.dark,
         ),
         home: HomeScreen(
-          loadTimetable: loadTimetable,
+          loadTimes: loadTimes,
+          place: place,
+          places: places,
+          isFirstLaunch: isFirstLaunch,
           asrMethod: asrMethod,
           language: language,
         ),

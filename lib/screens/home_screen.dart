@@ -1,32 +1,51 @@
+import 'dart:async';
+import 'dart:developer' show log;
+
 import 'package:flutter/material.dart';
 import 'package:hijri/hijri_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 import 'package:prayer_times/data/calculated_timetable.dart';
+import 'package:prayer_times/data/place.dart';
+import 'package:prayer_times/data/place_times.dart';
 import 'package:prayer_times/data/prayer_clock.dart';
 import 'package:prayer_times/data/timetable.dart';
 import 'package:prayer_times/l10n/app_language.dart';
 import 'package:prayer_times/l10n/app_localizations.dart';
+import 'package:prayer_times/l10n/prayer_name.dart';
+import 'package:prayer_times/screens/place_screen.dart';
 import 'package:prayer_times/screens/settings_screen.dart';
+import 'package:prayer_times/screens/times_table.dart';
 
-/// Today's prayer times, a countdown to the next prayer, the Gregorian and
-/// Hijri dates, and where the times came from.
+/// Today's prayer times for the chosen place, a countdown to the next
+/// prayer, the Gregorian and Hijri dates, and where the times came from.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
-    required this.loadTimetable,
+    required this.loadTimes,
+    required this.place,
+    required this.places,
     required this.asrMethod,
     required this.language,
+    this.isFirstLaunch = false,
     this.now = DateTime.now,
   });
 
-  /// Loads the timetable covering [now], or null if none is available.
-  final Future<Timetable?> Function(DateTime now) loadTimetable;
+  /// Loads the times for a chosen place (null: automatic) at a moment.
+  final Future<ResolvedTimes> Function(Place? chosen, DateTime now) loadTimes;
+
+  /// The saved choice of place (null: automatic), and every place offered.
+  final ValueNotifier<Place?> place;
+  final List<Place> places;
 
   /// The user's choices from settings.
   final ValueNotifier<AsrMethod> asrMethod;
   final ValueNotifier<AppLanguage> language;
+
+  /// True on the app's very first run: if there's no location then, the
+  /// place list opens by itself.
+  final bool isFirstLaunch;
 
   /// The current time. Tests pass a fixed moment.
   final DateTime Function() now;
@@ -38,20 +57,72 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   // shortcut: loads once; if the app stays open across midnight on
   // 31 December, "Try again" loads the new year. Fix when adding refresh.
-  late Future<Timetable?> _timetable = widget.loadTimetable(widget.now());
+  late Future<ResolvedTimes> _times;
 
-  /// A new "now" every second, which redraws the countdown.
-  late final Stream<DateTime> _ticks = Stream.periodic(
-    const Duration(seconds: 1),
-    (_) => widget.now(),
-  );
+  /// Redraws the screen every second, for the countdown.
+  late final Timer _ticker;
 
-  void _retry() {
-    // A block body, not `() => _timetable = ...`: an arrow would return the
+  /// Starts loading. The screen shows any error; it is also logged, so an
+  /// unexpected one is never invisible (and never counts as "unhandled" in
+  /// the moment before the screen listens).
+  Future<ResolvedTimes> _load() {
+    final times = widget.loadTimes(widget.place.value, widget.now());
+    unawaited(
+      times.then<void>(
+        (_) {},
+        onError: (Object error, StackTrace stack) =>
+            log('Loading prayer times failed', error: error, stackTrace: stack),
+      ),
+    );
+    return times;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _times = _load();
+    _ticker = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => setState(() {}),
+    );
+    if (widget.isFirstLaunch) {
+      // First run and no location: go straight to the place list.
+      unawaited(
+        _times.then<void>(
+          // It worked: save "automatic" (a SavedPlace saves on every set),
+          // so later launches aren't treated as the first.
+          (_) => widget.place.value = widget.place.value,
+          onError: (Object error) {
+            if (error is LocationUnavailable && mounted) {
+              unawaited(_openPlaces());
+            }
+          },
+        ),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _ticker.cancel();
+    super.dispose();
+  }
+
+  void _reload() {
+    // A block body, not `() => _times = ...`: an arrow would return the
     // Future, and setState rejects callbacks that return a Future.
     setState(() {
-      _timetable = widget.loadTimetable(widget.now());
+      _times = _load();
     });
+  }
+
+  Future<void> _openPlaces() async {
+    final chosen = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => PlaceScreen(place: widget.place, places: widget.places),
+      ),
+    );
+    if (chosen == true && mounted) _reload();
   }
 
   void _openSettings() => Navigator.of(context).push(
@@ -62,6 +133,46 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     ),
   );
+
+  /// What to show while loading, with times, or with a message instead.
+  Widget _content(BuildContext context, AsyncSnapshot<ResolvedTimes> loaded) {
+    final text = AppLocalizations.of(context);
+    return switch (loaded) {
+      AsyncSnapshot(connectionState: ConnectionState.waiting) => Center(
+        child: CircularProgressIndicator(
+          semanticsLabel:
+              text.loadingTimes, // finding a location can take a while
+        ),
+      ),
+      // Redraws whenever the Asr setting changes (and every second).
+      AsyncSnapshot(:final data?) => ValueListenableBuilder(
+        valueListenable: widget.asrMethod,
+        builder: (context, asr, _) => _TodayView(
+          times: data,
+          automatic: widget.place.value == null,
+          now: widget.now(),
+          asr: asr,
+          onRetry: _reload,
+          onChangePlace: _openPlaces,
+        ),
+      ),
+      AsyncSnapshot(error: LocationUnavailable()) => _Notice(
+        message: text.locationUnavailable,
+        action: text.choosePlace,
+        onPressed: _openPlaces,
+      ),
+      AsyncSnapshot(error: CalculationUnavailable()) => _Notice(
+        message: text.calculationUnavailable,
+        action: text.choosePlace,
+        onPressed: _openPlaces,
+      ),
+      _ => _Notice(
+        message: text.loadFailed,
+        action: text.retry,
+        onPressed: _reload,
+      ),
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,84 +188,133 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: FutureBuilder(
-        future: _timetable,
-        builder: (context, loaded) => switch (loaded) {
-          AsyncSnapshot(connectionState: ConnectionState.waiting) =>
-            const Center(child: CircularProgressIndicator()),
-          AsyncSnapshot(:final data?) => StreamBuilder(
-            stream: _ticks,
-            initialData: widget.now(),
-            // Redraws every second, and whenever the Asr setting changes.
-            builder: (context, tick) => ValueListenableBuilder(
-              valueListenable: widget.asrMethod,
-              builder: (context, asr, _) => _TodayView(
-                timetable: data,
-                now: tick.data ?? widget.now(),
-                asr: asr,
-                onRetry: _retry,
-              ),
-            ),
-          ),
-          _ => _LoadFailed(onRetry: _retry),
-        },
-      ),
+      body: FutureBuilder(future: _times, builder: _content),
     );
   }
 }
 
 class _TodayView extends StatelessWidget {
   const _TodayView({
-    required this.timetable,
+    required this.times,
+    required this.automatic,
     required this.now,
     required this.asr,
     required this.onRetry,
+    required this.onChangePlace,
   });
 
-  final Timetable timetable;
+  final ResolvedTimes times;
+  final bool automatic;
   final DateTime now;
   final AsrMethod asr;
   final VoidCallback onRetry;
+  final VoidCallback onChangePlace;
 
   @override
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
+    final timetable = times.timetable;
     final zone = tz.getLocation(timetable.timeZone);
     final today = dateIn(zone, now);
     final day = timetable.days[today];
-    if (day == null) return _LoadFailed(onRetry: onRetry);
+    if (day == null) {
+      return _Notice(
+        message: text.loadFailed,
+        action: text.retry,
+        onPressed: onRetry,
+      );
+    }
 
     final next = nextPrayer(timetable, now, asr: asr);
     // After Isha the next prayer is tomorrow's Fajr: highlight nothing today.
     final nextToday = next != null && dateIn(zone, next.at) == today;
+    final smallText = Theme.of(context).textTheme.bodySmall;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        _PlaceButton(
+          place: times.place,
+          automatic: automatic,
+          onPressed: onChangePlace,
+        ),
         if (next != null)
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Text(
-                text.nextPrayerIn(
-                  _prayerName(text, next.prayer),
-                  formatCountdown(next.at.difference(now)),
-                ),
-                style: Theme.of(context).textTheme.headlineSmall,
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
+          _Countdown(prayer: next.prayer, left: next.at.difference(now)),
         const SizedBox(height: 16),
         _Dates(date: DateTime.parse(today)),
         const SizedBox(height: 16),
-        _TimesTable(
+        TimesTable(
           day: day,
           asr: asr,
           highlight: nextToday ? next.prayer : null,
         ),
+        // Hanafi chosen, but this source only publishes the standard Asr.
+        if (asr == AsrMethod.hanafi && day.asrHanafi == null)
+          Text(text.hanafiNotPublished, style: smallText),
         const SizedBox(height: 16),
         _SourceLabel(timetable: timetable),
       ],
+    );
+  }
+}
+
+/// "Asr in 2:08:05": the next prayer and the time left until it starts.
+class _Countdown extends StatelessWidget {
+  const _Countdown({required this.prayer, required this.left});
+
+  final Prayer prayer;
+  final Duration left;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = AppLocalizations.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Text(
+          text.nextPrayerIn(prayerName(text, prayer), formatCountdown(left)),
+          style: Theme.of(context).textTheme.headlineSmall,
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+}
+
+/// Which place the times are for; tap to choose another.
+class _PlaceButton extends StatelessWidget {
+  const _PlaceButton({
+    required this.place,
+    required this.automatic,
+    required this.onPressed,
+  });
+
+  /// Null when the times are calculated for the user's own position.
+  final Place? place;
+  final bool automatic;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = AppLocalizations.of(context);
+    final icon = automatic
+        ? Icons.my_location
+        : (place?.isMosque ?? false)
+        ? Icons.mosque
+        : Icons.place;
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: Tooltip(
+        message: text.location,
+        child: TextButton.icon(
+          onPressed: onPressed,
+          // Screen readers hear "Use my location" for automatic mode.
+          icon: Icon(
+            icon,
+            semanticLabel: automatic ? text.useMyLocation : null,
+          ),
+          label: Text(place?.nameFor(text.localeName) ?? text.yourLocation),
+        ),
+      ),
     );
   }
 }
@@ -180,6 +340,8 @@ class _SourceLabel extends StatelessWidget {
       CalculatedMethod.muslimWorldLeague => text.calculatedMuslimWorldLeague,
       // A method this version doesn't know: still say "calculated".
       null when calculated => text.calculated,
+      // The official Saudi credit, translated as agreed with KACST.
+      null when timetable.sourceId == 'umm-al-qura' => text.sourceUmmAlQura,
       null => '$_isolateStart${timetable.sourceName}$_isolateEnd',
     };
     final style = Theme.of(context).textTheme.bodySmall;
@@ -228,106 +390,32 @@ class _Dates extends StatelessWidget {
   }
 }
 
-/// One row per time: the prayer, its start time and its jama'ah time.
-class _TimesTable extends StatelessWidget {
-  const _TimesTable({
-    required this.day,
-    required this.asr,
-    required this.highlight,
+/// A message instead of times, with one way forward.
+class _Notice extends StatelessWidget {
+  const _Notice({
+    required this.message,
+    required this.action,
+    required this.onPressed,
   });
 
-  final DayTimes day;
-  final AsrMethod asr;
-  final Prayer? highlight;
+  final String message;
+  final String action;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    final text = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final heading = theme.textTheme.labelLarge;
-
-    TableRow row(List<Widget> cells, {bool highlighted = false}) => TableRow(
-      decoration: highlighted
-          ? BoxDecoration(
-              color: theme.colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(8),
-            )
-          : null,
-      children: [
-        for (final cell in cells)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-            child: cell,
-          ),
-      ],
-    );
-
-    return Table(
-      columnWidths: const {0: FlexColumnWidth(2)},
-      children: [
-        // Screen readers hear each heading with its time instead (_TimeCell).
-        row([
-          const SizedBox.shrink(),
-          ExcludeSemantics(child: Text(text.startHeader, style: heading)),
-          ExcludeSemantics(child: Text(text.jamaahHeader, style: heading)),
-        ]),
-        for (final prayer in Prayer.values)
-          row(highlighted: prayer == highlight, [
-            Text(_prayerName(text, prayer), style: theme.textTheme.titleMedium),
-            _TimeCell(time: day.startOf(prayer, asr), column: text.startHeader),
-            _TimeCell(time: day.jamaah[prayer], column: text.jamaahHeader),
-          ]),
-      ],
-    );
-  }
-}
-
-/// A time that screen readers announce with its column, e.g. "Start 05:04".
-/// A missing time shows "—", which screen readers skip.
-class _TimeCell extends StatelessWidget {
-  const _TimeCell({required this.time, required this.column});
-
-  final String? time;
-  final String column;
-
-  @override
-  Widget build(BuildContext context) => switch (time) {
-    final time? => Text(time, semanticsLabel: '$column $time'),
-    null => const ExcludeSemantics(child: Text('—')),
-  };
-}
-
-class _LoadFailed extends StatelessWidget {
-  const _LoadFailed({required this.onRetry});
-
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(text.loadFailed, textAlign: TextAlign.center),
+            Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 16),
-            FilledButton(onPressed: onRetry, child: Text(text.retry)),
+            FilledButton(onPressed: onPressed, child: Text(action)),
           ],
         ),
       ),
     );
   }
 }
-
-/// A Dart 3 switch over an enum: the compiler insists every prayer is
-/// covered, so a new one can never be left without a name.
-String _prayerName(AppLocalizations text, Prayer prayer) => switch (prayer) {
-  Prayer.fajr => text.prayerFajr,
-  Prayer.sunrise => text.prayerSunrise,
-  Prayer.dhuhr => text.prayerDhuhr,
-  Prayer.asr => text.prayerAsr,
-  Prayer.maghrib => text.prayerMaghrib,
-  Prayer.isha => text.prayerIsha,
-};

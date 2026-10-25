@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
+import 'package:prayer_times/data/place.dart';
 import 'package:prayer_times/data/timetable.dart';
 import 'package:prayer_times/l10n/app_language.dart';
 import 'package:prayer_times/main.dart';
 
+import '../unit/data/sample_places.dart';
 import '../unit/data/sample_timetable.dart';
 
 /// Starts the whole app with the phone set to [phoneLanguage] and the app's
@@ -20,7 +22,10 @@ Future<void> pumpApp(
 
   await tester.pumpWidget(
     PrayerTimesApp(
-      loadTimetable: (_) async => sampleTimetable(),
+      loadTimes: (chosen, _) async =>
+          (timetable: sampleTimetable(), place: chosen ?? london),
+      place: ValueNotifier(london),
+      places: samplePlaces,
       asrMethod: ValueNotifier(AsrMethod.standard),
       language: ValueNotifier(chosen),
     ),

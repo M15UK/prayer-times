@@ -158,6 +158,78 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settings;
 
+  /// No description provided for @location.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get location;
+
+  /// No description provided for @yourLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Your location'**
+  String get yourLocation;
+
+  /// No description provided for @useMyLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Use my location'**
+  String get useMyLocation;
+
+  /// No description provided for @useMyLocationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The nearest official timetable, or times calculated for where you are'**
+  String get useMyLocationHint;
+
+  /// No description provided for @searchPlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for a city or mosque'**
+  String get searchPlaces;
+
+  /// No description provided for @noPlacesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No places match'**
+  String get noPlacesFound;
+
+  /// No description provided for @choosePlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a place'**
+  String get choosePlace;
+
+  /// No description provided for @locationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t find your location. Allow location access, or choose a place.'**
+  String get locationUnavailable;
+
+  /// No description provided for @calculationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayer times can\'t be calculated for where you are (for example, very near the poles). Please choose a place.'**
+  String get calculationUnavailable;
+
+  /// No description provided for @loadingTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading prayer times'**
+  String get loadingTimes;
+
+  /// No description provided for @hanafiNotPublished.
+  ///
+  /// In en, this message translates to:
+  /// **'This timetable only publishes the standard Asr time.'**
+  String get hanafiNotPublished;
+
+  /// The credit agreed with KACST for official Saudi times. Keep the capital C.
+  ///
+  /// In en, this message translates to:
+  /// **'Umm al-Qura Calendar'**
+  String get sourceUmmAlQura;
+
   /// No description provided for @language.
   ///
   /// In en, this message translates to:

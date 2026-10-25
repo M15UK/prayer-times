@@ -2,6 +2,9 @@
     <!-- Downloads timetables from our API. Debug builds get this
          automatically; release builds need it declared here. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Approximate (city-level) location only: enough to find the nearest
+         official timetable. The exact position never leaves the phone. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <application
         android:label="prayer_times"
         android:name="${applicationName}"

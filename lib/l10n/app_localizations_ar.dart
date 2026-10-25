@@ -40,6 +40,44 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settings => 'الإعدادات';
 
   @override
+  String get location => 'الموقع';
+
+  @override
+  String get yourLocation => 'موقعك';
+
+  @override
+  String get useMyLocation => 'استخدم موقعي';
+
+  @override
+  String get useMyLocationHint => 'أقرب جدول رسمي، أو مواقيت محسوبة لمكانك';
+
+  @override
+  String get searchPlaces => 'ابحث عن مدينة أو مسجد';
+
+  @override
+  String get noPlacesFound => 'لا توجد أماكن مطابقة';
+
+  @override
+  String get choosePlace => 'اختر مكانًا';
+
+  @override
+  String get locationUnavailable =>
+      'تعذّر تحديد موقعك. اسمح بالوصول إلى الموقع، أو اختر مكانًا.';
+
+  @override
+  String get calculationUnavailable =>
+      'لا يمكن حساب مواقيت الصلاة لمكانك (مثل المناطق القريبة جدًا من القطبين). يُرجى اختيار مكان.';
+
+  @override
+  String get loadingTimes => 'جارٍ تحميل مواقيت الصلاة';
+
+  @override
+  String get hanafiNotPublished => 'هذا الجدول ينشر وقت العصر عند الجمهور فقط.';
+
+  @override
+  String get sourceUmmAlQura => 'تقويم أم القرى';
+
+  @override
   String get language => 'اللغة';
 
   @override

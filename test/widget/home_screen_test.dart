@@ -1,33 +1,59 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
 import 'package:prayer_times/data/calculated_timetable.dart';
+import 'package:prayer_times/data/place.dart';
+import 'package:prayer_times/data/place_times.dart';
+import 'package:prayer_times/data/saved_place.dart';
 import 'package:prayer_times/data/timetable.dart';
 import 'package:prayer_times/l10n/app_language.dart';
 import 'package:prayer_times/l10n/app_localizations.dart';
 import 'package:prayer_times/screens/home_screen.dart';
 
+import '../unit/data/sample_places.dart';
 import '../unit/data/sample_timetable.dart';
 
 /// 12:09 London time on 25 October 2026 (London is on GMT that day).
 final lunchtime = DateTime.utc(2026, 10, 25, 12, 9);
 
-/// Shows the home screen with [loadTimetable] standing in for the internet.
+/// A loader that shows [timetable] for whichever place is chosen, or for
+/// [place] in automatic mode (null: the user's own spot).
+Future<ResolvedTimes> Function(Place?, DateTime) showing(
+  Timetable timetable, {
+  Place? place = london,
+}) =>
+    (chosen, _) async => (timetable: timetable, place: chosen ?? place);
+
+/// Shows the home screen. [loadTimes] stands in for the internet and the
+/// phone's location; by default it shows London's sample timetable.
 Future<void> pumpHome(
   WidgetTester tester, {
-  Future<Timetable?> Function(DateTime now)? loadTimetable,
+  Future<ResolvedTimes> Function(Place? chosen, DateTime now)? loadTimes,
+  ValueNotifier<Place?>? place,
+  bool isFirstLaunch = false,
   AsrMethod asr = AsrMethod.standard,
   DateTime? now,
   Locale locale = const Locale('en'),
 }) async {
+  // A tall, phone-like screen, so the whole page is built without scrolling.
+  tester.view.physicalSize = const Size(800, 1600);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
   await tester.pumpWidget(
     MaterialApp(
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: HomeScreen(
-        loadTimetable: loadTimetable ?? (_) async => sampleTimetable(),
+        loadTimes: loadTimes ?? showing(sampleTimetable()),
+        place: place ?? ValueNotifier(london),
+        places: samplePlaces,
+        isFirstLaunch: isFirstLaunch,
         asrMethod: ValueNotifier(asr),
         language: ValueNotifier(AppLanguage.phone),
         now: () => now ?? lunchtime,
@@ -54,7 +80,9 @@ void main() {
   ) async {
     await pumpHome(tester);
 
+    expect(find.text('London'), findsOneWidget); // the place button
     expect(find.text('05:04'), findsOneWidget); // Fajr start
+    expect(find.text("Jama'ah"), findsOneWidget);
     expect(find.text('19:30'), findsOneWidget); // Isha jama'ah
     expect(find.text('14:17'), findsOneWidget); // Standard Asr
     expect(find.text('14:57'), findsNothing); // Hanafi Asr only by choice
@@ -75,6 +103,7 @@ void main() {
     expect(find.text('14:57'), findsOneWidget);
     expect(find.text('14:17'), findsNothing);
     expect(find.text('Asr in 2:48:00'), findsOneWidget);
+    expect(find.textContaining('only publishes the standard'), findsNothing);
   });
 
   testWidgets('switches to Hanafi from the settings screen', (tester) async {
@@ -89,6 +118,90 @@ void main() {
     expect(find.text('14:57'), findsOneWidget);
   });
 
+  testWidgets('shows the place, and reloads after choosing another', (
+    tester,
+  ) async {
+    final asked = <Place?>[];
+    await pumpHome(
+      tester,
+      loadTimes: (chosen, now) {
+        asked.add(chosen);
+        return showing(sampleTimetable())(chosen, now);
+      },
+    );
+
+    await tester.tap(find.text('London'));
+    await finishTransition(tester);
+    await tester.tap(find.text('Riyadh'));
+    await finishTransition(tester);
+
+    expect(asked, [london, riyadh]);
+    expect(find.text('Riyadh'), findsOneWidget);
+  });
+
+  testWidgets('says "Your location" for times calculated for my spot', (
+    tester,
+  ) async {
+    final calculated = calculateTimetable(
+      latitude: 53.4808,
+      longitude: -2.2426,
+      timeZone: 'Europe/London',
+      year: 2026,
+      method: CalculatedMethod.muslimWorldLeague,
+    );
+
+    await pumpHome(
+      tester,
+      place: ValueNotifier(null),
+      loadTimes: showing(calculated, place: null),
+    );
+
+    expect(find.text('Your location'), findsOneWidget);
+  });
+
+  group('an official Saudi timetable', () {
+    final saudi = showing(sampleSaudiTimetable(), place: riyadh);
+
+    testWidgets('hides the Jama\'ah column, which it does not have', (
+      tester,
+    ) async {
+      await pumpHome(tester, place: ValueNotifier(riyadh), loadTimes: saudi);
+
+      expect(find.text('04:38'), findsOneWidget); // Fajr start
+      expect(find.text("Jama'ah"), findsNothing);
+    });
+
+    testWidgets('notes it only publishes the standard Asr', (tester) async {
+      await pumpHome(
+        tester,
+        place: ValueNotifier(riyadh),
+        loadTimes: saudi,
+        asr: AsrMethod.hanafi,
+      );
+
+      expect(find.text('14:53'), findsOneWidget); // the official Asr
+      expect(
+        find.text('This timetable only publishes the standard Asr time.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('credits the Umm al-Qura Calendar in both languages', (
+      tester,
+    ) async {
+      await pumpHome(tester, place: ValueNotifier(riyadh), loadTimes: saudi);
+      expect(find.text('Source: Umm al-Qura Calendar'), findsOneWidget);
+
+      await pumpHome(
+        tester,
+        place: ValueNotifier(riyadh),
+        loadTimes: saudi,
+        locale: const Locale('ar'),
+      );
+      expect(find.text('المصدر: تقويم أم القرى'), findsOneWidget);
+    });
+  });
+
   testWidgets('labels calculated times clearly, in both languages', (
     tester,
   ) async {
@@ -100,7 +213,7 @@ void main() {
       method: CalculatedMethod.muslimWorldLeague,
     );
 
-    await pumpHome(tester, loadTimetable: (_) async => calculated);
+    await pumpHome(tester, loadTimes: showing(calculated));
     expect(
       find.textContaining(
         'Calculated on this phone (Muslim World League method)',
@@ -111,7 +224,7 @@ void main() {
 
     await pumpHome(
       tester,
-      loadTimetable: (_) async => calculated,
+      loadTimes: showing(calculated),
       locale: const Locale('ar'),
     );
     expect(find.textContaining('محسوبة على هذا الجهاز'), findsOneWidget);
@@ -128,7 +241,7 @@ void main() {
       days: sample.days,
     );
 
-    await pumpHome(tester, loadTimetable: (_) async => unknownMethod);
+    await pumpHome(tester, loadTimes: showing(unknownMethod));
 
     expect(find.textContaining('Calculated on this phone'), findsOneWidget);
     expect(find.textContaining('Should not be shown'), findsNothing);
@@ -137,6 +250,7 @@ void main() {
   testWidgets('shows prayer names and labels in Arabic', (tester) async {
     await pumpHome(tester, locale: const Locale('ar'));
 
+    expect(find.text('لندن'), findsOneWidget); // the place button
     expect(find.text('الفجر'), findsOneWidget);
     expect(find.text('العصر بعد 2:08:00'), findsOneWidget);
     expect(find.textContaining('جمادى الأولى'), findsOneWidget);
@@ -154,30 +268,123 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('offers to try again when there are no times', (tester) async {
-    var loads = 0;
-    await pumpHome(
-      tester,
-      loadTimetable: (_) async {
-        loads++;
-        return null;
-      },
-    );
+  testWidgets('tells screen readers it is loading', (tester) async {
+    final semantics = tester.ensureSemantics();
+    final loading = Completer<ResolvedTimes>();
 
-    expect(find.textContaining("Couldn't load prayer times"), findsOneWidget);
+    await pumpHome(tester, loadTimes: (_, _) => loading.future);
 
-    await tester.tap(find.text('Try again'));
-    await tester.pump();
-
-    expect(loads, 2);
+    expect(find.bySemanticsLabel('Loading prayer times'), findsOneWidget);
+    semantics.dispose();
   });
 
-  testWidgets('offers to try again when today is not in the timetable', (
+  testWidgets('tells screen readers when the place is automatic', (
     tester,
   ) async {
-    // The sample only has 25 and 26 October 2026.
-    await pumpHome(tester, now: DateTime.utc(2027, 1, 1, 12));
+    final semantics = tester.ensureSemantics();
 
-    expect(find.text('Try again'), findsOneWidget);
+    await pumpHome(
+      tester,
+      place: ValueNotifier(null),
+      loadTimes: showing(sampleTimetable()),
+    );
+    expect(find.bySemanticsLabel(RegExp('Use my location')), findsOneWidget);
+    semantics.dispose();
+  });
+
+  group('when there are no times', () {
+    testWidgets('explains a missing location and offers the place list', (
+      tester,
+    ) async {
+      await pumpHome(
+        tester,
+        place: ValueNotifier(null),
+        loadTimes: (_, _) async => throw const LocationUnavailable(),
+      );
+
+      expect(find.textContaining("Couldn't find your location"), findsOne);
+      await tester.tap(find.text('Choose a place'));
+      await finishTransition(tester);
+      expect(find.text('Use my location'), findsOneWidget);
+    });
+
+    testWidgets('explains when times cannot be calculated near the poles', (
+      tester,
+    ) async {
+      await pumpHome(
+        tester,
+        place: ValueNotifier(null),
+        loadTimes: (_, _) async =>
+            throw const CalculationUnavailable('80° is inside a polar circle'),
+      );
+
+      expect(find.textContaining("can't be calculated"), findsOneWidget);
+      expect(find.text('Choose a place'), findsOneWidget);
+    });
+
+    testWidgets('opens the place list by itself on a first launch', (
+      tester,
+    ) async {
+      await pumpHome(
+        tester,
+        place: ValueNotifier(null),
+        isFirstLaunch: true,
+        loadTimes: (_, _) async => throw const LocationUnavailable(),
+      );
+      await finishTransition(tester);
+
+      expect(find.text('Use my location'), findsOneWidget);
+    });
+
+    testWidgets('a first launch that works is remembered as automatic', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({});
+      final storage = await SharedPreferences.getInstance();
+      final saved = SavedPlace(storage, places: samplePlaces);
+
+      await pumpHome(tester, place: saved, isFirstLaunch: saved.isFirstLaunch);
+
+      // So the next launch is not a "first launch" again.
+      expect(storage.getString('place'), 'automatic');
+    });
+
+    testWidgets('but not on later launches', (tester) async {
+      await pumpHome(
+        tester,
+        place: ValueNotifier(null),
+        loadTimes: (_, _) async => throw const LocationUnavailable(),
+      );
+      await finishTransition(tester);
+
+      expect(find.text('Use my location'), findsNothing);
+    });
+
+    testWidgets('offers to try again when loading fails', (tester) async {
+      var loads = 0;
+      await pumpHome(
+        tester,
+        loadTimes: (_, _) async {
+          loads++;
+          throw const FileSystemException('Storage unavailable');
+        },
+      );
+
+      expect(find.textContaining("Couldn't load prayer times"), findsOne);
+
+      await tester.tap(find.text('Try again'));
+      await tester.pump();
+
+      expect(loads, 2);
+    });
+
+    testWidgets('offers to try again when today is not in the timetable', (
+      tester,
+    ) async {
+      // The sample only has 25 and 26 October 2026.
+      await pumpHome(tester, now: DateTime.utc(2027, 1, 1, 12));
+
+      expect(find.text('Try again'), findsOneWidget);
+    });
   });
 }
