@@ -3,9 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:timezone/data/latest.dart' as tzdata;
+import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
+import 'package:prayer_times/data/calculated_timetable.dart';
 import 'package:prayer_times/data/saved_setting.dart';
 import 'package:prayer_times/data/timetable.dart';
 import 'package:prayer_times/data/timetable_repository.dart';
@@ -28,12 +29,21 @@ Future<void> main() async {
   final storage = await SharedPreferences.getInstance();
   runApp(
     PrayerTimesApp(
-      // London's year, not the phone's: at 20:00 on 31 December in New York
-      // it is already the new year in London.
-      loadTimetable: (now) => repository.load(
-        place: 'london',
-        year: tz.TZDateTime.from(now, london).year,
-      ),
+      loadTimetable: (now) async {
+        // London's year, not the phone's: at 20:00 on 31 December in New
+        // York it is already the new year in London.
+        final year = tz.TZDateTime.from(now, london).year;
+        // Official first; if there is none (offline with nothing saved, or
+        // not published yet), calculate, and the screen says so.
+        return await repository.load(place: 'london', year: year) ??
+            calculateTimetable(
+              latitude: 51.5072,
+              longitude: -0.1276,
+              timeZone: 'Europe/London',
+              year: year,
+              method: CalculatedMethod.muslimWorldLeague,
+            );
+      },
       asrMethod: SavedSetting(
         storage,
         key: 'asrMethod',

@@ -48,6 +48,23 @@ void main() {
     expect(decoded.days['2026-10-26']?.jamaah, isEmpty);
   });
 
+  test('startTimesInOrder needs every time later than the one before', () {
+    const inOrder = {
+      Prayer.fajr: '05:04',
+      Prayer.sunrise: '06:39',
+      Prayer.dhuhr: '11:50',
+      Prayer.asr: '14:17',
+      Prayer.maghrib: '16:50',
+      Prayer.isha: '18:17',
+    };
+
+    expect(startTimesInOrder(inOrder), isTrue);
+    // Isha after midnight reads "00:05", before Maghrib.
+    expect(startTimesInOrder({...inOrder, Prayer.isha: '00:05'}), isFalse);
+    expect(startTimesInOrder({...inOrder, Prayer.asr: '11:50'}), isFalse);
+    expect(startTimesInOrder({...inOrder}..remove(Prayer.dhuhr)), isFalse);
+  });
+
   group('startOf', () {
     const day = DayTimes(
       start: {Prayer.dhuhr: '11:50', Prayer.asr: '14:17'},

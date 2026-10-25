@@ -49,3 +49,6 @@ app.*.map.json
 
 # Output of tool/build_api.dart when run locally
 /public/
+
+# Test-only Chrome downloaded by the puppeteer package (tool/fetch_umm_al_qura.dart)
+/.local-chrome/

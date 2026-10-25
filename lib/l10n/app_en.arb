@@ -39,6 +39,12 @@
     "description": "Where the times on screen came from.",
     "placeholders": {"name": {"type": "String"}}
   },
+  "calculatedUmmAlQura": "Calculated on this phone (Umm al-Qura method)",
+  "@calculatedUmmAlQura": {
+    "description": "Source label for times calculated with Saudi Arabia's official method. Must always say they are calculated."
+  },
+  "calculatedMuslimWorldLeague": "Calculated on this phone (Muslim World League method)",
+  "calculated": "Calculated on this phone",
   "hijriDate": "{day} {month} {year} AH",
   "@hijriDate": {
     "placeholders": {

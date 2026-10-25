@@ -71,6 +71,16 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get calculatedUmmAlQura => 'محسوبة على هذا الجهاز (طريقة أم القرى)';
+
+  @override
+  String get calculatedMuslimWorldLeague =>
+      'محسوبة على هذا الجهاز (طريقة رابطة العالم الإسلامي)';
+
+  @override
+  String get calculated => 'محسوبة على هذا الجهاز';
+
+  @override
   String hijriDate(int day, String month, int year) {
     return '$day $month $year هـ';
   }
