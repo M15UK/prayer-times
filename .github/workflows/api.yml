@@ -1,0 +1,52 @@
+# Rebuilds our timetable API every day and publishes it on GitHub Pages.
+name: Publish timetable API
+
+on:
+  schedule:
+    # Every day at 03:30 UTC.
+    # shortcut: GitHub pauses schedules in public repos after 60 days with no
+    # commits; re-enable from the Actions tab if the files stop updating.
+    - cron: '30 3 * * *'
+  # Adds a "Run workflow" button on the Actions tab.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write # publish to GitHub Pages
+  id-token: write # prove to Pages that this workflow is allowed to publish
+
+# Never run two publishes at once.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Flutter (same version as on your Mac)
+        run: |
+          git clone --depth 1 --branch 3.47.7 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+
+      - run: flutter pub get
+
+      # Publish nothing if our converter's own tests fail.
+      - run: flutter test test/unit
+
+      - name: Build the timetable files
+        run: dart run tool/build_api.dart public
+        env:
+          LONDON_PRAYER_TIMES_API_KEY: ${{ secrets.LONDON_PRAYER_TIMES_API_KEY }}
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: public
+
+      - id: deployment
+        uses: actions/deploy-pages@v5
