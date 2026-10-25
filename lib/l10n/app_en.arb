@@ -1,0 +1,11 @@
+{
+  "@@locale": "en",
+  "appTitle": "Prayer Times",
+  "@appTitle": {
+    "description": "App name, shown in the top bar and the phone's app switcher."
+  },
+  "todayPlaceholder": "Today's prayer times will appear here.",
+  "@todayPlaceholder": {
+    "description": "Temporary home screen text until the times screen is built in Step 5."
+  }
+}
