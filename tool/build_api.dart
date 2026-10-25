@@ -9,10 +9,10 @@ library;
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:prayer_times/data/http_get.dart';
 import 'package:prayer_times/data/timetable.dart';
 
 const _apiKeyVariable = 'LONDON_PRAYER_TIMES_API_KEY';
-const _requestTimeout = Duration(seconds: 30);
 
 /// The credit wording agreed with London Prayer Times by email.
 const _londonSourceName =
@@ -48,8 +48,6 @@ const _londonOrderRules = [
   ['magrib', 'magrib_jamat', 'isha'],
   ['isha', 'isha_jamat'],
 ];
-
-final _clockTime = RegExp(r'^([01]\d|2[0-3]):[0-5]\d$');
 
 Future<void> main(List<String> args) async {
   final apiKey = Platform.environment[_apiKeyVariable] ?? '';
@@ -109,10 +107,6 @@ void checkFullYear(int year, Iterable<String> dates) {
   }
 }
 
-/// True if [date] is "yyyy-mm-dd" and really exists (not e.g. 2026-13-40).
-bool _isRealDate(String date) =>
-    DateTime.tryParse(date)?.toIso8601String().startsWith(date) ?? false;
-
 /// A short preview of an API response for error messages.
 String _preview(Object? value) {
   final text = '$value';
@@ -120,16 +114,16 @@ String _preview(Object? value) {
 }
 
 DayTimes _parseLondonDay(String date, Object? day) {
-  if (date.length != 10 || !_isRealDate(date) || day is! Map<String, dynamic>) {
+  if (!isIsoDate(date) || day is! Map<String, dynamic>) {
     throw FormatException('$date: expected a real date and an object of times');
   }
 
   String timeOf(String field) {
     final value = day[field];
-    if (value is! String || !_clockTime.hasMatch(value)) {
+    if (!isClockTime(value)) {
       throw FormatException('$date: "$field" should be HH:mm, got $value');
     }
-    return value;
+    return value as String;
   }
 
   for (final fields in _londonOrderRules) {
@@ -210,25 +204,17 @@ Future<String> _fetch(Uri url) async {
   final safeUrl = url.replace(
     queryParameters: {...url.queryParameters, 'key': 'hidden'},
   );
-  final client = HttpClient()..connectionTimeout = _requestTimeout;
   try {
-    final request = await client.getUrl(url);
-    final response = await request.close().timeout(_requestTimeout);
-    final body = await response
-        .transform(utf8.decoder)
-        .join()
-        .timeout(_requestTimeout);
-    if (response.statusCode != HttpStatus.ok) {
+    final response = await httpGet(url);
+    if (response.status != HttpStatus.ok) {
       throw HttpException(
-        'HTTP ${response.statusCode}: ${_preview(body)}',
+        'HTTP ${response.status}: ${_preview(response.body)}',
         uri: safeUrl,
       );
     }
-    return body;
+    return response.body;
   } on HttpException catch (error) {
     // Dart's own HTTP errors include the full URL, key and all.
     throw HttpException(error.message, uri: safeUrl);
-  } finally {
-    client.close();
   }
 }

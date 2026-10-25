@@ -8,15 +8,41 @@ library;
 /// The times a timetable lists, in the order they happen in a day.
 enum Prayer { fajr, sunrise, dhuhr, asr, maghrib, isha }
 
+final _clockTime = RegExp(r'^([01]\d|2[0-3]):[0-5]\d$');
+
+/// True for a 24-hour "HH:mm" time such as "05:04" or "18:17".
+bool isClockTime(Object? value) =>
+    value is String && _clockTime.hasMatch(value);
+
+/// True for a real "yyyy-mm-dd" date such as "2026-10-25" (not "2026-13-40").
+bool isIsoDate(String value) =>
+    value.length == 10 &&
+    (DateTime.tryParse(value)?.toIso8601String().startsWith(value) ?? false);
+
 /// One day of times from one source.
 class DayTimes {
   const DayTimes({required this.start, this.asrHanafi, this.jamaah = const {}});
 
-  factory DayTimes.fromJson(Map<String, dynamic> json) => DayTimes(
-    start: _prayerTimesFromJson(json['start']),
-    asrHanafi: json['asrHanafi'] as String?,
-    jamaah: _prayerTimesFromJson(json['jamaah'] ?? const <String, dynamic>{}),
-  );
+  /// Reads a day from downloaded JSON. Throws [FormatException] if anything
+  /// is missing or malformed, so bad data never reaches the screen.
+  factory DayTimes.fromJson(Object? json) {
+    if (json is! Map<String, dynamic>) {
+      throw FormatException('A day must be an object, got $json');
+    }
+    final start = _prayerTimesFromJson(json['start']);
+    if (start.length != Prayer.values.length) {
+      throw FormatException('A day needs all six start times: $start');
+    }
+    final asrHanafi = json['asrHanafi'];
+    if (asrHanafi != null && !isClockTime(asrHanafi)) {
+      throw FormatException('asrHanafi should be HH:mm, got $asrHanafi');
+    }
+    return DayTimes(
+      start: start,
+      asrHanafi: asrHanafi as String?,
+      jamaah: _prayerTimesFromJson(json['jamaah'] ?? const <String, dynamic>{}),
+    );
+  }
 
   /// Start (adhan) time of every [Prayer].
   final Map<Prayer, String> start;
@@ -43,16 +69,35 @@ class Timetable {
     required this.days,
   });
 
-  factory Timetable.fromJson(Map<String, dynamic> json) => Timetable(
-    sourceId: json['sourceId'] as String,
-    sourceName: json['sourceName'] as String,
-    timeZone: json['timeZone'] as String,
-    days: {
-      for (final MapEntry(key: date, value: day)
-          in (json['days'] as Map<String, dynamic>).entries)
-        date: DayTimes.fromJson(day as Map<String, dynamic>),
-    },
-  );
+  /// Reads a timetable from downloaded JSON. Throws [FormatException] if it
+  /// is not one.
+  factory Timetable.fromJson(Object? json) {
+    // A Dart 3 pattern: matches only if every key is there with the right
+    // type, and pulls the values out into variables at the same time.
+    if (json case {
+      'sourceId': final String sourceId,
+      'sourceName': final String sourceName,
+      'timeZone': final String timeZone,
+      'days': final Map<String, dynamic> days,
+    }) {
+      // An empty or misdated file must never replace a good saved copy.
+      if (days.isEmpty || !days.keys.every(isIsoDate)) {
+        throw FormatException(
+          'Timetable has no days or a bad date: ${days.keys}',
+        );
+      }
+      return Timetable(
+        sourceId: sourceId,
+        sourceName: sourceName,
+        timeZone: timeZone,
+        days: {
+          for (final MapEntry(key: date, value: day) in days.entries)
+            date: DayTimes.fromJson(day),
+        },
+      );
+    }
+    throw const FormatException('Not a timetable: no source, zone or days');
+  }
 
   /// Short stable ID, e.g. "london-unified".
   final String sourceId;
@@ -82,8 +127,20 @@ Map<String, String> _prayerTimesToJson(Map<Prayer, String> times) => {
     prayer.name: time,
 };
 
-Map<Prayer, String> _prayerTimesFromJson(Object? json) => {
-  for (final MapEntry(key: name, value: time)
-      in (json as Map<String, dynamic>).entries)
-    Prayer.values.byName(name): time as String,
-};
+Map<Prayer, String> _prayerTimesFromJson(Object? json) {
+  if (json is! Map<String, dynamic>) {
+    throw FormatException('Expected prayer times, got $json');
+  }
+  final prayersByName = Prayer.values.asNameMap();
+  return {
+    for (final MapEntry(key: name, value: time) in json.entries)
+      _prayerNamed(prayersByName, name): _checkedTime(name, time),
+  };
+}
+
+Prayer _prayerNamed(Map<String, Prayer> prayersByName, String name) =>
+    prayersByName[name] ?? (throw FormatException('Unknown prayer "$name"'));
+
+String _checkedTime(String name, Object? time) => isClockTime(time)
+    ? time as String
+    : throw FormatException('$name should be HH:mm, got $time');
