@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
+import 'package:prayer_times/data/display_settings.dart';
 import 'package:prayer_times/data/place.dart';
 import 'package:prayer_times/data/prayer_alerts.dart';
 import 'package:prayer_times/data/timetable.dart';
@@ -18,6 +19,7 @@ Future<void> pumpApp(
   WidgetTester tester, {
   required String phoneLanguage,
   AppLanguage chosen = AppLanguage.phone,
+  DisplaySettings? display,
 }) async {
   tester.platformDispatcher.localesTestValue = [Locale(phoneLanguage)];
   addTearDown(tester.platformDispatcher.clearLocalesTestValue);
@@ -28,6 +30,7 @@ Future<void> pumpApp(
           (timetable: sampleTimetable(), place: chosen ?? london),
       place: ValueNotifier(london),
       places: samplePlaces,
+      display: display ?? DisplaySettings(),
       asrMethod: ValueNotifier(AsrMethod.standard),
       language: ValueNotifier(chosen),
       alerts: ValueNotifier(PrayerAlerts.on),

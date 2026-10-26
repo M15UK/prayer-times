@@ -206,4 +206,76 @@ class AppLocalizationsEn extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get am => 'AM';
+
+  @override
+  String get pm => 'PM';
+
+  @override
+  String get display => 'Display';
+
+  @override
+  String get displayHint => 'Theme, colour, time format and times shown';
+
+  @override
+  String get theme => 'Theme';
+
+  @override
+  String get asPhone => 'As the phone';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
+  String get colour => 'Colour';
+
+  @override
+  String get colourTeal => 'Teal';
+
+  @override
+  String get colourBlue => 'Blue';
+
+  @override
+  String get colourGreen => 'Green';
+
+  @override
+  String get colourPurple => 'Purple';
+
+  @override
+  String get colourAmber => 'Amber';
+
+  @override
+  String get colourWallpaper => 'Wallpaper colours';
+
+  @override
+  String get colourWallpaperHint =>
+      'Android 12 and newer; other phones show teal';
+
+  @override
+  String get colourHint => 'Widgets change colour on Android 12 and newer';
+
+  @override
+  String get asPhoneClockHint =>
+      'A change on the phone shows when the app next starts';
+
+  @override
+  String get timeFormat => 'Time format';
+
+  @override
+  String get timeFormat12 => '12-hour (5:53 PM)';
+
+  @override
+  String get timeFormat24 => '24-hour (17:53)';
+
+  @override
+  String get timesShown => 'Times shown';
+
+  @override
+  String get timesShownHint =>
+      'Hidden times are still counted down to, and their alerts still come.';
 }

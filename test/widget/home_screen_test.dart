@@ -8,6 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
 import 'package:prayer_times/data/calculated_timetable.dart';
+import 'package:prayer_times/data/clock_format.dart';
+import 'package:prayer_times/data/display_settings.dart';
 import 'package:prayer_times/data/place.dart';
 import 'package:prayer_times/data/place_times.dart';
 import 'package:prayer_times/data/prayer_alerts.dart';
@@ -44,6 +46,8 @@ Future<void> pumpHome(
   PrayerAlerts alerts = PrayerAlerts.on,
   FakeNotifications? notifications,
   Future<void> Function(String json) publishWidgets = noWidgets,
+  DisplaySettings? display,
+  bool phoneIs24Hour = true,
   DateTime? now,
   Locale locale = const Locale('en'),
 }) async {
@@ -52,21 +56,28 @@ Future<void> pumpHome(
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(
-    MaterialApp(
-      locale: locale,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: HomeScreen(
-        loadTimes: loadTimes ?? showing(sampleTimetable()),
-        place: place ?? ValueNotifier(london),
-        places: samplePlaces,
-        isFirstLaunch: isFirstLaunch,
-        asrMethod: ValueNotifier(asr),
-        language: ValueNotifier(AppLanguage.phone),
-        alerts: ValueNotifier(alerts),
-        notifications: notifications ?? FakeNotifications(),
-        publishWidgets: publishWidgets,
-        now: () => now ?? lunchtime,
+    // The phone's 12/24-hour setting, as the screens read it. (The test
+    // phone's own switch isn't passed on to a screen that already exists.)
+    MediaQuery(
+      data: MediaQueryData.fromView(tester.view)
+          .copyWith(alwaysUse24HourFormat: phoneIs24Hour),
+      child: MaterialApp(
+        locale: locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: HomeScreen(
+          loadTimes: loadTimes ?? showing(sampleTimetable()),
+          place: place ?? ValueNotifier(london),
+          places: samplePlaces,
+          isFirstLaunch: isFirstLaunch,
+          asrMethod: ValueNotifier(asr),
+          language: ValueNotifier(AppLanguage.phone),
+          alerts: ValueNotifier(alerts),
+          notifications: notifications ?? FakeNotifications(),
+          publishWidgets: publishWidgets,
+          display: display ?? DisplaySettings(),
+          now: () => now ?? lunchtime,
+        ),
       ),
     ),
   );
@@ -102,6 +113,72 @@ void main() {
       find.textContaining('London Unified Prayer Timetable'),
       findsNothing,
     );
+  });
+
+  group('display settings', () {
+    testWidgets('shows 12-hour times when chosen, for screen readers too', (
+      tester,
+    ) async {
+      final display = DisplaySettings()..clock.value = ClockFormat.twelveHour;
+      await pumpHome(tester, display: display);
+
+      expect(find.text('2:17 PM'), findsOneWidget); // Asr start
+      expect(find.text('3:15 PM'), findsOneWidget); // Asr jama'ah
+      expect(find.text('14:17'), findsNothing);
+      expect(find.bySemanticsLabel(RegExp('2:17 PM')), findsOneWidget);
+    });
+
+    testWidgets("follows the phone's 12-hour setting until one is chosen", (
+      tester,
+    ) async {
+      await pumpHome(tester, phoneIs24Hour: false);
+
+      expect(find.text('2:17 PM'), findsOneWidget);
+    });
+
+    testWidgets('writes the alerts in 12-hour time on a 12-hour phone', (
+      tester,
+    ) async {
+      final phone = FakeNotifications();
+
+      await pumpHome(tester, notifications: phone, phoneIs24Hour: false);
+
+      expect(phone.replaced.last.first.body, '2:17 PM · London');
+    });
+
+    testWidgets('hands the widgets each display choice as it changes', (
+      tester,
+    ) async {
+      final published = <Map<String, dynamic>>[];
+      final display = DisplaySettings();
+      await pumpHome(
+        tester,
+        display: display,
+        publishWidgets: (json) async =>
+            published.add(jsonDecode(json) as Map<String, dynamic>),
+      );
+
+      display.clock.value = ClockFormat.twelveHour;
+      display.hiddenTimes.value = {Prayer.sunrise};
+      await tester.pump();
+
+      final sunrise = (published.last['days'] as List).first['rows'][1] as Map;
+      expect(published.last['is24Hour'], isFalse);
+      expect(sunrise['hidden'], isTrue);
+    });
+
+    testWidgets('hides the chosen times, but still counts down to them', (
+      tester,
+    ) async {
+      final display = DisplaySettings()
+        ..hiddenTimes.value = {Prayer.sunrise, Prayer.asr};
+      await pumpHome(tester, display: display);
+
+      expect(find.text('Sunrise'), findsNothing);
+      expect(find.text('14:17'), findsNothing);
+      expect(find.text('Asr in 2:08:00'), findsOneWidget);
+      expect(find.text('05:04'), findsOneWidget); // Fajr still shown
+    });
   });
 
   testWidgets('shows the source of the times on screen in Settings', (

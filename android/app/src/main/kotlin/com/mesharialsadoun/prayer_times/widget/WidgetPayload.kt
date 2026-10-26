@@ -9,8 +9,14 @@ import org.json.JSONObject
 /** The payload format this version reads; any other is ignored. */
 const val PAYLOAD_VERSION = 2
 
-/** One time on the widget: a prayer, or sunrise, which is never [counts]ed down to. */
-data class Row(val name: String, val time: String, val at: Long, val counts: Boolean)
+/**
+ * One time on the widget: a prayer, or sunrise, which is never [counts]ed
+ * down to. A [hidden] one is left off the widget but still counted down to.
+ */
+data class Row(val name: String, val time: String, val at: Long, val counts: Boolean, val hidden: Boolean = false)
+
+/** The Android 12+ widgets' colours (ARGB) for a fixed colour choice. */
+data class WidgetColours(val card: Int, val pill: Int, val onPill: Int, val icon: Int)
 
 /** One day in the timetable's own time zone, from [start] until [end], with its two dates. */
 data class Day(val start: Long, val end: Long, val date: String, val hijri: String, val rows: List<Row>)
@@ -18,7 +24,9 @@ data class Day(val start: Long, val end: Long, val date: String, val hijri: Stri
 /**
  * Everything the app saved, with the text already in the app's language
  * ([lang]). [calculated] is the mark shown when the times aren't official,
- * and empty when they are.
+ * and empty when they are. [is24Hour] is null to follow the phone; with
+ * [wallpaper] the widget reads the phone's own colours, and [colours] (if
+ * any) are a fixed colour's, both Android 12+ only.
  */
 data class Payload(
     val rtl: Boolean,
@@ -27,6 +35,9 @@ data class Payload(
     val calculated: String,
     val openApp: String,
     val days: List<Day>,
+    val is24Hour: Boolean? = null,
+    val wallpaper: Boolean = false,
+    val colours: WidgetColours? = null,
 )
 
 /** What to show now: today's times, the next prayer, and when to look again. */
@@ -46,6 +57,10 @@ fun parsePayload(json: String?): Payload? {
             calculated = payload.getString("calculated"),
             openApp = payload.getString("openApp"),
             days = List(days.length()) { parseDay(days.getJSONObject(it)) },
+            // Display choices: each left out by the app when it's the default.
+            is24Hour = if (payload.has("is24Hour")) payload.getBoolean("is24Hour") else null,
+            wallpaper = payload.optBoolean("wallpaper", false),
+            colours = payload.optJSONObject("colours")?.let(::parseColours),
         )
     } catch (_: JSONException) {
         null // the caller says so in the log
@@ -61,10 +76,24 @@ private fun parseDay(day: JSONObject): Day {
         hijri = day.getString("hijri"),
         rows = List(rows.length()) {
             val row = rows.getJSONObject(it)
-            Row(row.getString("name"), row.getString("time"), row.getLong("at"), row.getBoolean("counts"))
+            Row(
+                row.getString("name"),
+                row.getString("time"),
+                row.getLong("at"),
+                row.getBoolean("counts"),
+                hidden = row.optBoolean("hidden", false),
+            )
         },
     )
 }
+
+// The app writes ARGB as unsigned 32-bit numbers, so read them as Long.
+private fun parseColours(colours: JSONObject) = WidgetColours(
+    card = colours.getLong("card").toInt(),
+    pill = colours.getLong("pill").toInt(),
+    onPill = colours.getLong("onPill").toInt(),
+    icon = colours.getLong("icon").toInt(),
+)
 
 /**
  * Today and the next prayer at [now] (milliseconds since 1970), or null once

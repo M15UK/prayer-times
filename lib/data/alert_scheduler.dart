@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:flutter/foundation.dart';
 
+import 'package:prayer_times/data/clock_format.dart';
 import 'package:prayer_times/data/place_times.dart';
 import 'package:prayer_times/data/prayer_alerts.dart';
 import 'package:prayer_times/data/timetable.dart';
@@ -15,15 +16,20 @@ class AlertScheduler {
   AlertScheduler({
     required this.asr,
     required this.alerts,
+    required this.clock,
     required this.replaceAll,
     this.now = DateTime.now,
   }) {
     asr.addListener(replan);
     alerts.addListener(replan);
+    clock.addListener(replan);
   }
 
   final ValueListenable<AsrMethod> asr;
   final ValueListenable<PrayerAlerts> alerts;
+
+  /// 12- or 24-hour times in the alerts, or as the phone shows them.
+  final ValueListenable<ClockFormat> clock;
 
   /// Swaps every waiting alert on the phone for these.
   final Future<void> Function(List<PrayerAlert>) replaceAll;
@@ -57,8 +63,25 @@ class AlertScheduler {
     if (times == null || text == null) return;
     final planned = alerts.value == PrayerAlerts.off
         ? <PrayerAlert>[]
-        : planAlerts(times: times, now: now(), asr: asr.value, text: text);
+        : planAlerts(
+            times: times,
+            now: now(),
+            asr: asr.value,
+            text: text,
+            is24Hour: clock.value.resolve(phoneIs24Hour: _phoneIs24Hour),
+          );
     _queue = _queue.then((_) => _replace(planned));
+  }
+
+  // Assumed until the screen reports the phone's own setting.
+  bool _phoneIs24Hour = true;
+
+  /// The phone's own 12/24-hour setting, for "as the phone". The same
+  /// setting again (the screen tells us often) changes nothing.
+  void phoneClockChanged(bool is24Hour) {
+    if (is24Hour == _phoneIs24Hour) return;
+    _phoneIs24Hour = is24Hour;
+    replan();
   }
 
   Future<void> _replace(List<PrayerAlert> planned) async {
@@ -73,5 +96,6 @@ class AlertScheduler {
   void dispose() {
     asr.removeListener(replan);
     alerts.removeListener(replan);
+    clock.removeListener(replan);
   }
 }

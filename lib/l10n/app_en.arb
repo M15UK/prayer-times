@@ -89,5 +89,28 @@
   "@hijriMonthShort": {
     "description": "Short Hijri month name for the widgets; month is m1 to m12.",
     "placeholders": {"month": {"type": "String"}}
-  }
+  },
+  "am": "AM",
+  "pm": "PM",
+  "display": "Display",
+  "displayHint": "Theme, colour, time format and times shown",
+  "theme": "Theme",
+  "asPhone": "As the phone",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "colour": "Colour",
+  "colourTeal": "Teal",
+  "colourBlue": "Blue",
+  "colourGreen": "Green",
+  "colourPurple": "Purple",
+  "colourAmber": "Amber",
+  "colourWallpaper": "Wallpaper colours",
+  "colourWallpaperHint": "Android 12 and newer; other phones show teal",
+  "colourHint": "Widgets change colour on Android 12 and newer",
+  "asPhoneClockHint": "A change on the phone shows when the app next starts",
+  "timeFormat": "Time format",
+  "timeFormat12": "12-hour (5:53 PM)",
+  "timeFormat24": "24-hour (17:53)",
+  "timesShown": "Times shown",
+  "timesShownHint": "Hidden times are still counted down to, and their alerts still come."
 }

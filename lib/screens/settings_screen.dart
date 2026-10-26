@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:prayer_times/data/display_settings.dart';
 import 'package:prayer_times/data/phone_notifications.dart';
 import 'package:prayer_times/data/prayer_alerts.dart';
 import 'package:prayer_times/data/source_line.dart';
@@ -7,9 +8,11 @@ import 'package:prayer_times/data/timetable.dart';
 import 'package:prayer_times/l10n/app_language.dart';
 import 'package:prayer_times/l10n/app_localizations.dart';
 import 'package:prayer_times/screens/alert_permission.dart';
+import 'package:prayer_times/screens/choice_section.dart';
+import 'package:prayer_times/screens/display_screen.dart';
 
-/// The app's settings: prayer alerts, language and Asr time, and where the
-/// times on screen came from.
+/// The app's settings: prayer alerts, the Display page, language and Asr
+/// time, and where the times on screen came from.
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({
     super.key,
@@ -17,6 +20,7 @@ class SettingsScreen extends StatelessWidget {
     required this.asrMethod,
     required this.alerts,
     required this.notifications,
+    required this.display,
     this.timetable,
   });
 
@@ -27,6 +31,9 @@ class SettingsScreen extends StatelessWidget {
 
   /// The phone, asked for permission when alerts are switched on.
   final PhoneNotifications notifications;
+
+  /// Theme, colour, time format and times shown (the Display page).
+  final DisplaySettings display;
 
   /// The times on screen, for their source (null: none loaded yet).
   final Timetable? timetable;
@@ -55,7 +62,18 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
           const Divider(),
-          _ChoiceSection(
+          ListTile(
+            title: Text(text.display),
+            subtitle: Text(text.displayHint),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => DisplayScreen(display: display),
+              ),
+            ),
+          ),
+          const Divider(),
+          ChoiceSection(
             heading: text.language,
             setting: language,
             options: [
@@ -66,7 +84,7 @@ class SettingsScreen extends StatelessWidget {
             ],
           ),
           const Divider(),
-          _ChoiceSection(
+          ChoiceSection(
             heading: text.asrTime,
             setting: asrMethod,
             options: [
@@ -79,55 +97,6 @@ class SettingsScreen extends StatelessWidget {
             ListTile(title: Text(sourceLine(shown, text))),
           ],
         ],
-      ),
-    );
-  }
-}
-
-/// A heading and a one-of-several choice, saved straight into [setting].
-class _ChoiceSection<T> extends StatelessWidget {
-  const _ChoiceSection({
-    required this.heading,
-    required this.setting,
-    required this.options,
-  });
-
-  final String heading;
-  final ValueNotifier<T> setting;
-
-  /// Each option: its value, its title, and an optional hint underneath.
-  final List<(T, String, String?)> options;
-
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: setting,
-      // RadioGroup lets screen readers announce the options as one choice
-      // ("1 of 3, selected").
-      builder: (context, selected, _) => RadioGroup<T>(
-        groupValue: selected,
-        onChanged: (option) {
-          if (option != null) setting.value = option;
-        },
-        child: Column(
-          children: [
-            ListTile(
-              title: Semantics(
-                header: true,
-                child: Text(
-                  heading,
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-              ),
-            ),
-            for (final (value, title, hint) in options)
-              RadioListTile<T>(
-                value: value,
-                title: Text(title),
-                subtitle: hint == null ? null : Text(hint),
-              ),
-          ],
-        ),
       ),
     );
   }

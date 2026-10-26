@@ -8,6 +8,7 @@ import 'package:timezone/timezone.dart' as tz;
 
 import 'package:prayer_times/data/alert_scheduler.dart';
 import 'package:prayer_times/data/calculated_timetable.dart';
+import 'package:prayer_times/data/display_settings.dart';
 import 'package:prayer_times/data/phone_notifications.dart';
 import 'package:prayer_times/data/place.dart';
 import 'package:prayer_times/data/place_times.dart';
@@ -36,6 +37,7 @@ class HomeScreen extends StatefulWidget {
     required this.language,
     required this.alerts,
     required this.notifications,
+    required this.display,
     this.publishWidgets = noWidgets,
     this.isFirstLaunch = false,
     this.now = DateTime.now,
@@ -58,6 +60,9 @@ class HomeScreen extends StatefulWidget {
 
   /// Hands the home-screen widgets their payload (JSON).
   final Future<void> Function(String json) publishWidgets;
+
+  /// Theme, colour, time format and times shown (the Display page).
+  final DisplaySettings display;
 
   /// True on the app's very first run: if there's no location then, the
   /// place list opens by itself.
@@ -83,6 +88,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   /// Keeps the home-screen widgets in step with what this screen shows.
   late final WidgetPublisher _widgets;
+
+  /// Changes when anything that alters the times' look does.
+  late final Listenable _timesLook;
 
   /// The timetable on screen, for Settings to name its source.
   Timetable? _shown;
@@ -138,14 +146,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _scheduler = AlertScheduler(
       asr: widget.asrMethod,
       alerts: widget.alerts,
+      clock: widget.display.clock,
       replaceAll: widget.notifications.replaceAll,
       now: widget.now,
     );
     _widgets = WidgetPublisher(
       asr: widget.asrMethod,
+      display: widget.display,
       publish: widget.publishWidgets,
       now: widget.now,
     );
+    _timesLook = Listenable.merge([
+      widget.asrMethod,
+      widget.display.clock,
+      widget.display.hiddenTimes,
+    ]);
     _times = _load();
     _ticker = Timer.periodic(
       const Duration(seconds: 1),
@@ -175,6 +190,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final text = AppLocalizations.of(context);
     _scheduler.textChanged(text);
     _widgets.textChanged(text);
+    // The widgets read the phone's 12/24-hour setting themselves.
+    _scheduler.phoneClockChanged(MediaQuery.alwaysUse24HourFormatOf(context));
   }
 
   @override
@@ -210,6 +227,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         asrMethod: widget.asrMethod,
         alerts: widget.alerts,
         notifications: widget.notifications,
+        display: widget.display,
         timetable: _shown,
       ),
     ),
@@ -225,14 +243,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               text.loadingTimes, // finding a location can take a while
         ),
       ),
-      // Redraws whenever the Asr setting changes (and every second).
-      AsyncSnapshot(:final data?) => ValueListenableBuilder(
-        valueListenable: widget.asrMethod,
-        builder: (context, asr, _) => _TodayView(
+      // Redraws whenever the Asr, time format or shown times change (and
+      // every second).
+      AsyncSnapshot(:final data?) => ListenableBuilder(
+        listenable: _timesLook,
+        builder: (context, _) => _TodayView(
           times: data,
           automatic: widget.place.value == null,
           now: widget.now(),
-          asr: asr,
+          asr: widget.asrMethod.value,
+          is24Hour: widget.display.clock.value.resolve(
+            phoneIs24Hour: MediaQuery.alwaysUse24HourFormatOf(context),
+          ),
+          hidden: widget.display.hiddenTimes.value,
           onRetry: _reload,
           onChangePlace: _openPlaces,
         ),
@@ -280,6 +303,8 @@ class _TodayView extends StatelessWidget {
     required this.automatic,
     required this.now,
     required this.asr,
+    required this.is24Hour,
+    required this.hidden,
     required this.onRetry,
     required this.onChangePlace,
   });
@@ -288,6 +313,8 @@ class _TodayView extends StatelessWidget {
   final bool automatic;
   final DateTime now;
   final AsrMethod asr;
+  final bool is24Hour;
+  final Set<Prayer> hidden;
   final VoidCallback onRetry;
   final VoidCallback onChangePlace;
 
@@ -327,6 +354,8 @@ class _TodayView extends StatelessWidget {
           day: day,
           asr: asr,
           highlight: nextToday ? next.prayer : null,
+          is24Hour: is24Hour,
+          hidden: hidden,
         ),
         // Hanafi chosen, but this source only publishes the standard Asr.
         if (asr == AsrMethod.hanafi && day.asrHanafi == null)

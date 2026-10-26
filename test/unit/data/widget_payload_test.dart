@@ -6,7 +6,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
+import 'package:prayer_times/data/app_colour.dart';
 import 'package:prayer_times/data/calculated_timetable.dart';
+import 'package:prayer_times/data/clock_format.dart';
 import 'package:prayer_times/data/place.dart';
 import 'package:prayer_times/data/timetable.dart';
 import 'package:prayer_times/data/widget_payload.dart';
@@ -18,6 +20,11 @@ import 'sample_timetable.dart';
 /// The payload both widget tests share: the Android widget's test reads
 /// this same file, so the two sides can't drift apart.
 const widgetPayloadFixture = 'test/unit/data/widget_payload_fixture.json';
+
+/// The same payload with every display choice set (sunrise hidden, 12-hour
+/// time, wallpaper colours), also read by the Android widget's test.
+const widgetPayloadDisplayFixture =
+    'test/unit/data/widget_payload_display_fixture.json';
 
 void main() {
   setUpAll(() async {
@@ -48,6 +55,43 @@ void main() {
       jsonDecode(jsonEncode(payload)),
       jsonDecode(File(widgetPayloadFixture).readAsStringSync()),
     );
+  });
+
+  test('marks hidden times, a chosen clock and wallpaper colours, as in the '
+      'second shared fixture', () {
+    final payload = widgetPayload(
+      times: (timetable: sampleTimetable(), place: london),
+      now: lunchtime,
+      asr: AsrMethod.standard,
+      text: english,
+      hidden: {Prayer.sunrise},
+      clock: ClockFormat.twelveHour,
+      colour: AppColour.wallpaper,
+    );
+
+    expect(
+      jsonDecode(jsonEncode(payload)),
+      jsonDecode(File(widgetPayloadDisplayFixture).readAsStringSync()),
+    );
+  });
+
+  test("gives a fixed colour's widget colours", () {
+    final payload = widgetPayload(
+      times: (timetable: sampleTimetable(), place: london),
+      now: lunchtime,
+      asr: AsrMethod.standard,
+      text: english,
+      colour: AppColour.blue,
+    );
+    final colours = AppColour.blue.widgetColours!;
+
+    expect(payload['colours'], {
+      'card': colours.card,
+      'pill': colours.pill,
+      'onPill': colours.onPill,
+      'icon': colours.icon,
+    });
+    expect(payload.containsKey('wallpaper'), isFalse);
   });
 
   test('uses the Hanafi Asr time when chosen', () {

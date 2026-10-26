@@ -33,8 +33,9 @@ fun refreshWidgets(context: Context) {
     // taken away later, Android says nothing: the 30-minute update fixes it.)
     val countdown = canBeExact(context)
 
-    // Read at every redraw, so a change of the phone's setting shows next time.
-    val is24Hour = DateFormat.is24HourFormat(context)
+    // Read at every redraw, so a change of the phone's setting shows next
+    // time (unless the app's Display page chose 12- or 24-hour).
+    val phoneIs24Hour = DateFormat.is24HourFormat(context)
 
     val manager = AppWidgetManager.getInstance(context)
     var placed = false
@@ -42,7 +43,7 @@ fun refreshWidgets(context: Context) {
         val ids = manager.getAppWidgetIds(ComponentName(context, style.provider))
         if (ids.isEmpty()) continue
         placed = true
-        manager.updateAppWidget(ids, styleViews(context, style, payload, pick, now, countdown, is24Hour))
+        manager.updateAppWidget(ids, styleViews(context, style, payload, pick, now, countdown, phoneIs24Hour))
     }
     scheduleWake(context, if (placed) pick?.wakeAt else null)
 }

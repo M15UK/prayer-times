@@ -1,0 +1,102 @@
+{
+  "v": 2,
+  "rtl": false,
+  "lang": "en",
+  "place": "London",
+  "calculated": "",
+  "openApp": "Open the app to update the times",
+  "days": [
+    {
+      "start": 1792882800000,
+      "end": 1792972800000,
+      "date": "Sun 25 Oct",
+      "hijri": "14 Jum I",
+      "rows": [
+        {
+          "name": "Fajr",
+          "time": "05:04",
+          "at": 1792904640000,
+          "counts": true
+        },
+        {
+          "name": "Sunrise",
+          "time": "06:39",
+          "at": 1792910340000,
+          "counts": false,
+          "hidden": true
+        },
+        {
+          "name": "Dhuhr",
+          "time": "11:50",
+          "at": 1792929000000,
+          "counts": true
+        },
+        {
+          "name": "Asr",
+          "time": "14:17",
+          "at": 1792937820000,
+          "counts": true
+        },
+        {
+          "name": "Maghrib",
+          "time": "16:50",
+          "at": 1792947000000,
+          "counts": true
+        },
+        {
+          "name": "Isha",
+          "time": "18:17",
+          "at": 1792952220000,
+          "counts": true
+        }
+      ]
+    },
+    {
+      "start": 1792972800000,
+      "end": 1793059200000,
+      "date": "Mon 26 Oct",
+      "hijri": "15 Jum I",
+      "rows": [
+        {
+          "name": "Fajr",
+          "time": "05:05",
+          "at": 1792991100000,
+          "counts": true
+        },
+        {
+          "name": "Sunrise",
+          "time": "06:41",
+          "at": 1792996860000,
+          "counts": false,
+          "hidden": true
+        },
+        {
+          "name": "Dhuhr",
+          "time": "11:50",
+          "at": 1793015400000,
+          "counts": true
+        },
+        {
+          "name": "Asr",
+          "time": "14:15",
+          "at": 1793024100000,
+          "counts": true
+        },
+        {
+          "name": "Maghrib",
+          "time": "16:48",
+          "at": 1793033280000,
+          "counts": true
+        },
+        {
+          "name": "Isha",
+          "time": "18:15",
+          "at": 1793038500000,
+          "counts": true
+        }
+      ]
+    }
+  ],
+  "is24Hour": false,
+  "wallpaper": true
+}

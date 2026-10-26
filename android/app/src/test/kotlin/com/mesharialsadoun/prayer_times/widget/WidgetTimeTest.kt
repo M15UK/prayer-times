@@ -32,6 +32,14 @@ class WidgetTimeTest {
     }
 
     @Test
+    fun liveClocksFollowThePhoneUnlessAFormatIsChosen() {
+        // (12-hour format, 24-hour format) handed to the live clock.
+        assertEquals("h" to "HH", liveClockFormats(forced24Hour = null, "h", "HH"))
+        assertEquals("h" to "h", liveClockFormats(forced24Hour = false, "h", "HH"))
+        assertEquals("HH" to "HH", liveClockFormats(forced24Hour = true, "h", "HH"))
+    }
+
+    @Test
     fun anythingElseIsShownAsItIs() {
         assertEquals(ClockText("soon", ""), clockText("soon", is24Hour = false, english))
         assertEquals(ClockText("25:00", ""), clockText("25:00", is24Hour = false, english))

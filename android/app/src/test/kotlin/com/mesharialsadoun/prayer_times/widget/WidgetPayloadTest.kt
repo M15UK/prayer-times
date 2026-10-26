@@ -35,6 +35,37 @@ class WidgetPayloadTest {
     }
 
     @Test
+    fun withNoDisplayChoicesEverythingIsAsTheWidgetsDefault() {
+        assertNull(payload.is24Hour) // follow the phone
+        assertFalse(payload.wallpaper)
+        assertNull(payload.colours)
+        assertFalse(payload.days[0].rows.any { it.hidden })
+    }
+
+    @Test
+    fun readsTheDisplayChoices() {
+        val display = parsePayload(
+            File("../../test/unit/data/widget_payload_display_fixture.json").readText(),
+        )!!
+
+        assertEquals(false, display.is24Hour)
+        assertTrue(display.wallpaper)
+        assertEquals(listOf("Sunrise"), display.days[0].rows.filter { it.hidden }.map { it.name })
+    }
+
+    @Test
+    fun readsAFixedColoursWidgetColours() {
+        // The app writes colours as unsigned 32-bit numbers, beyond Int.MAX_VALUE.
+        val json = File("../../test/unit/data/widget_payload_fixture.json").readText()
+            .replaceFirst("\"days\"", "\"colours\": {\"card\": 4278190080, \"pill\": 4294967295, \"onPill\": 4278190335, \"icon\": 4278255360}, \"days\"")
+
+        assertEquals(
+            WidgetColours(card = 0xFF000000.toInt(), pill = 0xFFFFFFFF.toInt(), onPill = 0xFF0000FF.toInt(), icon = 0xFF00FF00.toInt()),
+            parsePayload(json)!!.colours,
+        )
+    }
+
+    @Test
     fun atLunchtimeTheNextPrayerIsAsr() {
         val pick = pick(payload, lunchtime25th)!!
 

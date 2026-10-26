@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:prayer_times/data/display_settings.dart';
 import 'package:prayer_times/data/prayer_alerts.dart';
 import 'package:prayer_times/data/timetable.dart';
 import 'package:prayer_times/l10n/app_language.dart';
@@ -35,11 +36,26 @@ void main() {
           asrMethod: ValueNotifier(AsrMethod.standard),
           alerts: alerts,
           notifications: phone,
+          display: DisplaySettings(),
           timetable: timetable,
         ),
       ),
     );
   }
+
+  testWidgets('opens the Display page', (tester) async {
+    await pumpSettings(
+      tester,
+      ValueNotifier(PrayerAlerts.on),
+      FakeNotifications(),
+    );
+
+    await tester.tap(find.text('Display'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.text('Time format'), findsOneWidget);
+  });
 
   group('the source of the times on screen', () {
     testWidgets('credits the Umm al-Qura Calendar in both languages', (

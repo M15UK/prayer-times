@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Prayer strip (4×1): six columns of name, icon and time, the next prayer
-     on a light pill. Also the picker's preview, with Asr highlighted. -->
+     on a light pill. Also the picker's preview, with Asr highlighted.
+     UseAppTint is ignored: widgets are drawn with Android's own ImageView,
+     which reads android:tint, never AppCompat's app:tint. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/root"
+    tools:ignore="UseAppTint"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"

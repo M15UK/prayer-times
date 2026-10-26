@@ -9,6 +9,7 @@ import 'package:prayer_times/data/place_times.dart';
 import 'package:prayer_times/data/prayer_clock.dart';
 import 'package:prayer_times/data/timetable.dart';
 import 'package:prayer_times/l10n/app_localizations.dart';
+import 'package:prayer_times/l10n/format_clock.dart';
 import 'package:prayer_times/l10n/prayer_name.dart';
 
 /// The user's choice for prayer alerts. [askFirst] (before the app has asked
@@ -35,6 +36,7 @@ List<PrayerAlert> planAlerts({
   required DateTime now,
   required AsrMethod asr,
   required AppLocalizations text,
+  required bool is24Hour,
 }) {
   final where = times.place?.nameFor(text.localeName) ?? text.yourLocation;
   final calculated = isCalculated(times.timetable);
@@ -49,7 +51,11 @@ List<PrayerAlert> planAlerts({
         id: alertId(next),
         at: next.at,
         title: prayerName(text, next.prayer),
-        body: [next.time, where, if (calculated) text.calculated].join(' · '),
+        body: [
+          formatClock(next.time, is24Hour: is24Hour, text: text),
+          where,
+          if (calculated) text.calculated,
+        ].join(' · '),
       ),
   ];
 }
