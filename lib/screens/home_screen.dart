@@ -13,7 +13,9 @@ import 'package:prayer_times/data/place.dart';
 import 'package:prayer_times/data/place_times.dart';
 import 'package:prayer_times/data/prayer_alerts.dart';
 import 'package:prayer_times/data/prayer_clock.dart';
+import 'package:prayer_times/data/source_line.dart';
 import 'package:prayer_times/data/timetable.dart';
+import 'package:prayer_times/data/widget_publisher.dart';
 import 'package:prayer_times/l10n/app_language.dart';
 import 'package:prayer_times/l10n/app_localizations.dart';
 import 'package:prayer_times/l10n/prayer_name.dart';
@@ -34,6 +36,7 @@ class HomeScreen extends StatefulWidget {
     required this.language,
     required this.alerts,
     required this.notifications,
+    this.publishWidgets = noWidgets,
     this.isFirstLaunch = false,
     this.now = DateTime.now,
   });
@@ -52,6 +55,9 @@ class HomeScreen extends StatefulWidget {
 
   /// The phone's notifications, for the prayer alerts.
   final PhoneNotifications notifications;
+
+  /// Hands the home-screen widgets their payload (JSON).
+  final Future<void> Function(String json) publishWidgets;
 
   /// True on the app's very first run: if there's no location then, the
   /// place list opens by itself.
@@ -75,11 +81,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   /// Keeps the phone's prayer alerts in step with what this screen shows.
   late final AlertScheduler _scheduler;
 
+  /// Keeps the home-screen widgets in step with what this screen shows.
+  late final WidgetPublisher _widgets;
+
+  /// The timetable on screen, for Settings to name its source.
+  Timetable? _shown;
+
   /// Starts loading. Times that load go on to the alerts. The screen shows
   /// any error; it is also logged, so an unexpected one is never invisible
   /// (and never counts as "unhandled" in the moment before the screen
   /// listens).
   Future<ResolvedTimes> _load() {
+    _shown = null; // until the new times arrive
     final times = widget.loadTimes(widget.place.value, widget.now());
     unawaited(
       times.then<void>(
@@ -91,9 +104,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return times;
   }
 
-  /// Asks for alert permission the first time, then plans the alerts.
+  /// Updates the widgets, asks for alert permission the first time, then
+  /// plans the alerts.
   Future<void> _afterLoad(ResolvedTimes times) async {
     if (!mounted) return;
+    // Before the permission question, which can take a while to answer.
+    _shown = times.timetable;
+    _widgets.timesLoaded(times);
     if (widget.alerts.value == PrayerAlerts.askFirst) {
       await turnOnAlerts(
         context,
@@ -104,11 +121,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (mounted) _scheduler.timesLoaded(times);
   }
 
-  /// Back at the front: plans the alerts again, so they never run out while
-  /// the app sits in the background, and pick up any change to exact timing.
+  /// Back at the front: plans the alerts and widgets again, so they never
+  /// run out while the app sits in the background, and the alerts pick up
+  /// any change to exact timing.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _scheduler.replan();
+    if (state != AppLifecycleState.resumed) return;
+    _scheduler.replan();
+    _widgets.republish();
   }
 
   @override
@@ -119,6 +139,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       asr: widget.asrMethod,
       alerts: widget.alerts,
       replaceAll: widget.notifications.replaceAll,
+      now: widget.now,
+    );
+    _widgets = WidgetPublisher(
+      asr: widget.asrMethod,
+      publish: widget.publishWidgets,
       now: widget.now,
     );
     _times = _load();
@@ -147,7 +172,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _scheduler.textChanged(AppLocalizations.of(context));
+    final text = AppLocalizations.of(context);
+    _scheduler.textChanged(text);
+    _widgets.textChanged(text);
   }
 
   @override
@@ -155,6 +182,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _ticker.cancel();
     _scheduler.dispose();
+    _widgets.dispose();
     super.dispose();
   }
 
@@ -182,6 +210,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         asrMethod: widget.asrMethod,
         alerts: widget.alerts,
         notifications: widget.notifications,
+        timetable: _shown,
       ),
     ),
   );
@@ -303,7 +332,9 @@ class _TodayView extends StatelessWidget {
         if (asr == AsrMethod.hanafi && day.asrHanafi == null)
           Text(text.hanafiNotPublished, style: smallText),
         const SizedBox(height: 16),
-        _SourceLabel(timetable: timetable),
+        // Official sources are named in Settings; calculated times must
+        // always say so here.
+        if (isCalculated(timetable)) _SourceLabel(timetable: timetable),
       ],
     );
   }
@@ -371,13 +402,8 @@ class _PlaceButton extends StatelessWidget {
   }
 }
 
-/// Unicode isolate marks (U+2068, U+2069): they keep an English name in one
-/// piece inside Arabic text, so its closing ")" stays put.
-final _isolateStart = String.fromCharCode(0x2068);
-final _isolateEnd = String.fromCharCode(0x2069);
-
-/// Where the times came from. Calculated times say so, with an icon, so
-/// they can never be mistaken for an official timetable.
+/// Shown only for calculated times: says so, with an icon, so they can never
+/// be mistaken for an official timetable.
 class _SourceLabel extends StatelessWidget {
   const _SourceLabel({required this.timetable});
 
@@ -385,25 +411,17 @@ class _SourceLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = AppLocalizations.of(context);
-    final calculated = isCalculated(timetable);
-    final name = switch (calculatedMethodOf(timetable)) {
-      CalculatedMethod.ummAlQura => text.calculatedUmmAlQura,
-      CalculatedMethod.muslimWorldLeague => text.calculatedMuslimWorldLeague,
-      // A method this version doesn't know: still say "calculated".
-      null when calculated => text.calculated,
-      // The official Saudi credit, translated as agreed with KACST.
-      null when timetable.sourceId == 'umm-al-qura' => text.sourceUmmAlQura,
-      null => '$_isolateStart${timetable.sourceName}$_isolateEnd',
-    };
     final style = Theme.of(context).textTheme.bodySmall;
     return Row(
       children: [
-        if (calculated) ...[
-          Icon(Icons.calculate_outlined, size: 16, color: style?.color),
-          const SizedBox(width: 4),
-        ],
-        Expanded(child: Text(text.source(name), style: style)),
+        Icon(Icons.calculate_outlined, size: 16, color: style?.color),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Text(
+            sourceLine(timetable, AppLocalizations.of(context)),
+            style: style,
+          ),
+        ),
       ],
     );
   }

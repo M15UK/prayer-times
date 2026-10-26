@@ -49,22 +49,25 @@ List<UpcomingPrayer> upcomingPrayers(
   int days = 2,
 }) {
   final zone = tz.getLocation(timetable.timeZone);
+  return [
+    for (final date in datesFrom(zone, now, days))
+      ..._prayersOn(timetable, zone, date, asr),
+  ].where((next) => next.at.isAfter(now)).toList();
+}
+
+/// The calendar dates ("yyyy-mm-dd") of [days] days from today in [zone].
+/// Built from the calendar date, not by adding 24 hours, which would be
+/// wrong on the 23- and 25-hour days when the clocks change.
+List<String> datesFrom(tz.Location zone, DateTime now, int days) {
   final today = DateTime.parse(dateIn(zone, now));
   return [
     for (var offset = 0; offset < days; offset++)
-      // Built from the calendar date, not by adding 24 hours, which would be
-      // wrong on the 23- and 25-hour days when the clocks change.
-      ..._prayersOn(
-        timetable,
-        zone,
-        DateTime.utc(
-          today.year,
-          today.month,
-          today.day + offset,
-        ).toIso8601String().substring(0, 10),
-        asr,
-      ),
-  ].where((next) => next.at.isAfter(now)).toList();
+      DateTime.utc(
+        today.year,
+        today.month,
+        today.day + offset,
+      ).toIso8601String().substring(0, 10),
+  ];
 }
 
 /// The five prayers on [date], or none if the timetable lacks that day.

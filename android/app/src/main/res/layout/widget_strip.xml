@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Prayer strip (4×1): six columns of name, icon and time, the next prayer
+     on a light pill. Also the picker's preview, with Asr highlighted. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    android:padding="4dp">
+
+    <TextView
+        android:id="@+id/message"
+        style="@style/WidgetText.Message" />
+
+    <LinearLayout
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/calculated"
+            style="@style/WidgetText.Calculated"
+            android:layout_marginStart="0dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <LinearLayout android:id="@+id/cell0" style="@style/WidgetColumn">
+                <TextView android:id="@+id/name0" style="@style/WidgetText.ColumnName" android:text="@string/sample_fajr" />
+                <ImageView android:id="@+id/icon0" style="@style/WidgetColumnIcon" android:contentDescription="@null" android:src="@drawable/ic_prayer_fajr" />
+                <TextView android:id="@+id/time0" style="@style/WidgetText.ColumnTime" android:text="@string/sample_time0" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/cell1" style="@style/WidgetColumn">
+                <TextView android:id="@+id/name1" style="@style/WidgetText.ColumnName" android:text="@string/sample_sunrise" />
+                <ImageView android:id="@+id/icon1" style="@style/WidgetColumnIcon" android:contentDescription="@null" android:src="@drawable/ic_prayer_sunrise" />
+                <TextView android:id="@+id/time1" style="@style/WidgetText.ColumnTime" android:text="@string/sample_time1" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/cell2" style="@style/WidgetColumn">
+                <TextView android:id="@+id/name2" style="@style/WidgetText.ColumnName" android:text="@string/sample_dhuhr" />
+                <ImageView android:id="@+id/icon2" style="@style/WidgetColumnIcon" android:contentDescription="@null" android:src="@drawable/ic_prayer_dhuhr" />
+                <TextView android:id="@+id/time2" style="@style/WidgetText.ColumnTime" android:text="@string/sample_time2" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/cell3" style="@style/WidgetColumn" android:background="@drawable/widget_pill">
+                <TextView android:id="@+id/name3" style="@style/WidgetText.ColumnName" android:text="@string/sample_asr" android:textColor="@color/widget_on_pill" />
+                <ImageView android:id="@+id/icon3" style="@style/WidgetColumnIcon" android:contentDescription="@null" android:src="@drawable/ic_prayer_asr" android:tint="@color/widget_on_pill" />
+                <TextView android:id="@+id/time3" style="@style/WidgetText.ColumnTime" android:text="@string/sample_time3" android:textColor="@color/widget_on_pill" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/cell4" style="@style/WidgetColumn">
+                <TextView android:id="@+id/name4" style="@style/WidgetText.ColumnName" android:text="@string/sample_maghrib" />
+                <ImageView android:id="@+id/icon4" style="@style/WidgetColumnIcon" android:contentDescription="@null" android:src="@drawable/ic_prayer_maghrib" />
+                <TextView android:id="@+id/time4" style="@style/WidgetText.ColumnTime" android:text="@string/sample_time4" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/cell5" style="@style/WidgetColumn">
+                <TextView android:id="@+id/name5" style="@style/WidgetText.ColumnName" android:text="@string/sample_isha" />
+                <ImageView android:id="@+id/icon5" style="@style/WidgetColumnIcon" android:contentDescription="@null" android:src="@drawable/ic_prayer_isha" />
+                <TextView android:id="@+id/time5" style="@style/WidgetText.ColumnTime" android:text="@string/sample_time5" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

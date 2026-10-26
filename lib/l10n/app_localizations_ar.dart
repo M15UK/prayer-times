@@ -176,4 +176,30 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get notificationsBlocked =>
       'الإشعارات غير مسموح بها لهذا التطبيق، لذلك تنبيهات الصلاة متوقفة. يمكنك السماح بها من إعدادات الهاتف.';
+
+  @override
+  String get widgetOpenApp => 'افتح التطبيق لتحديث المواقيت';
+
+  @override
+  String get calculatedMark => 'محسوبة';
+
+  @override
+  String hijriMonthShort(String month) {
+    String _temp0 = intl.Intl.selectLogic(month, {
+      'm1': 'محرم',
+      'm2': 'صفر',
+      'm3': 'ربيع الأول',
+      'm4': 'ربيع الآخر',
+      'm5': 'جمادى الأولى',
+      'm6': 'جمادى الآخرة',
+      'm7': 'رجب',
+      'm8': 'شعبان',
+      'm9': 'رمضان',
+      'm10': 'شوال',
+      'm11': 'ذو القعدة',
+      'm12': 'ذو الحجة',
+      'other': '',
+    });
+    return '$_temp0';
+  }
 }

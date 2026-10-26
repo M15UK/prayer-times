@@ -180,4 +180,30 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notificationsBlocked =>
       'Notifications aren\'t allowed for this app, so prayer alerts are off. You can allow them in the phone\'s settings.';
+
+  @override
+  String get widgetOpenApp => 'Open the app to update the times';
+
+  @override
+  String get calculatedMark => 'Calculated';
+
+  @override
+  String hijriMonthShort(String month) {
+    String _temp0 = intl.Intl.selectLogic(month, {
+      'm1': 'Muh',
+      'm2': 'Saf',
+      'm3': 'Rabi I',
+      'm4': 'Rabi II',
+      'm5': 'Jum I',
+      'm6': 'Jum II',
+      'm7': 'Raj',
+      'm8': 'Sha',
+      'm9': 'Ram',
+      'm10': 'Shaw',
+      'm11': 'Dhul Q',
+      'm12': 'Dhul H',
+      'other': '',
+    });
+    return '$_temp0';
+  }
 }

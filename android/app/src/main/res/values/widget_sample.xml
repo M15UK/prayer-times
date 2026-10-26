@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sample times for the widget picker's previews only. Real widgets start
+     with the "open the app" message and never show these. -->
+<resources>
+    <string name="sample_time0" translatable="false">05:05</string>
+    <string name="sample_time1" translatable="false">06:41</string>
+    <string name="sample_time2" translatable="false">11:50</string>
+    <string name="sample_time3" translatable="false">14:15</string>
+    <string name="sample_time4" translatable="false">16:48</string>
+    <string name="sample_time5" translatable="false">18:15</string>
+    <!-- No "%s": a countdown with this as its format shows it as written. -->
+    <string name="sample_countdown" translatable="false">1:23:45</string>
+    <string name="sample_countdown_clock" translatable="false">(1:23:45)</string>
+    <string name="widget_dot" translatable="false">" · "</string>
+</resources>

@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 
 import 'package:prayer_times/data/phone_notifications.dart';
 import 'package:prayer_times/data/prayer_alerts.dart';
+import 'package:prayer_times/data/source_line.dart';
 import 'package:prayer_times/data/timetable.dart';
 import 'package:prayer_times/l10n/app_language.dart';
 import 'package:prayer_times/l10n/app_localizations.dart';
 import 'package:prayer_times/screens/alert_permission.dart';
 
-/// The app's settings: prayer alerts, language and Asr time.
+/// The app's settings: prayer alerts, language and Asr time, and where the
+/// times on screen came from.
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({
     super.key,
@@ -15,6 +17,7 @@ class SettingsScreen extends StatelessWidget {
     required this.asrMethod,
     required this.alerts,
     required this.notifications,
+    this.timetable,
   });
 
   /// Setting any of these saves it and updates the whole app at once.
@@ -24,6 +27,9 @@ class SettingsScreen extends StatelessWidget {
 
   /// The phone, asked for permission when alerts are switched on.
   final PhoneNotifications notifications;
+
+  /// The times on screen, for their source (null: none loaded yet).
+  final Timetable? timetable;
 
   @override
   Widget build(BuildContext context) {
@@ -68,6 +74,10 @@ class SettingsScreen extends StatelessWidget {
               (AsrMethod.hanafi, text.asrHanafiOption, text.asrHanafiHint),
             ],
           ),
+          if (timetable case final shown?) ...[
+            const Divider(),
+            ListTile(title: Text(sourceLine(shown, text))),
+          ],
         ],
       ),
     );

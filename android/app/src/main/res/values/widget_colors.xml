@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The widgets' colours: the app's teal, with a light pill for the next
+     prayer. The widget code reads these too, to colour each cell. -->
+<resources>
+    <color name="widget_card">#E6162B2A</color>
+    <color name="widget_panel">#1FFFFFFF</color>
+    <color name="widget_clock_square">#2EFFFFFF</color>
+    <color name="widget_pill">#FFD9F2EE</color>
+    <color name="widget_on_pill">#FF0F2321</color>
+    <color name="widget_text">#FFFFFFFF</color>
+    <color name="widget_text_quiet">#B3FFFFFF</color>
+    <color name="widget_icon">#FF8FD3C8</color>
+</resources>

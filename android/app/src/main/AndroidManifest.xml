@@ -49,6 +49,85 @@
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
             </intent-filter>
         </receiver>
+        <!-- The six home-screen widget styles (WidgetStyles.kt), and the
+             receiver that redraws them at each prayer and midnight, and after
+             a restart, an app update or a change of the phone's clock. Not
+             exported: only Android itself sends to them. -->
+        <receiver
+            android:name=".widget.MiniWidget"
+            android:exported="false"
+            android:label="@string/widget_mini_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/mini_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.DateLocationWidget"
+            android:exported="false"
+            android:label="@string/widget_date_location_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/date_location_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.PrayerStripWidget"
+            android:exported="false"
+            android:label="@string/widget_strip_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/strip_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.FullHorizontalWidget"
+            android:exported="false"
+            android:label="@string/widget_full_horizontal_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/full_horizontal_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.DigitalClockWidget"
+            android:exported="false"
+            android:label="@string/widget_digital_clock_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/digital_clock_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.FullVerticalWidget"
+            android:exported="false"
+            android:label="@string/widget_full_vertical_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/full_vertical_widget_info" />
+        </receiver>
+        <receiver android:name=".widget.RefreshReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <!-- Exact timing just allowed: show the countdown again. -->
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

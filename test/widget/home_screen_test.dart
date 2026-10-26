@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ import 'package:prayer_times/data/place_times.dart';
 import 'package:prayer_times/data/prayer_alerts.dart';
 import 'package:prayer_times/data/saved_place.dart';
 import 'package:prayer_times/data/timetable.dart';
+import 'package:prayer_times/data/widget_publisher.dart';
 import 'package:prayer_times/l10n/app_language.dart';
 import 'package:prayer_times/l10n/app_localizations.dart';
 import 'package:prayer_times/screens/home_screen.dart';
@@ -41,6 +43,7 @@ Future<void> pumpHome(
   AsrMethod asr = AsrMethod.standard,
   PrayerAlerts alerts = PrayerAlerts.on,
   FakeNotifications? notifications,
+  Future<void> Function(String json) publishWidgets = noWidgets,
   DateTime? now,
   Locale locale = const Locale('en'),
 }) async {
@@ -62,6 +65,7 @@ Future<void> pumpHome(
         language: ValueNotifier(AppLanguage.phone),
         alerts: ValueNotifier(alerts),
         notifications: notifications ?? FakeNotifications(),
+        publishWidgets: publishWidgets,
         now: () => now ?? lunchtime,
       ),
     ),
@@ -81,9 +85,8 @@ Future<void> finishTransition(WidgetTester tester) async {
 void main() {
   setUpAll(tzdata.initializeTimeZones);
 
-  testWidgets("shows today's times, dates, source and countdown", (
-    tester,
-  ) async {
+  testWidgets("shows today's times, dates and countdown, but not the source "
+      'of official times', (tester) async {
     await pumpHome(tester);
 
     expect(find.text('London'), findsOneWidget); // the place button
@@ -96,8 +99,23 @@ void main() {
     expect(find.text('Sunday 25 October 2026'), findsOneWidget);
     expect(find.textContaining('14 Jumada al-Ula 1448 AH'), findsOneWidget);
     expect(
+      find.textContaining('London Unified Prayer Timetable'),
+      findsNothing,
+    );
+  });
+
+  testWidgets('shows the source of the times on screen in Settings', (
+    tester,
+  ) async {
+    await pumpHome(tester);
+
+    await tester.tap(find.byTooltip('Settings'));
+    await finishTransition(tester);
+
+    expect(
       find.textContaining(
-        'London Unified Prayer Timetable (East London Mosque)',
+        'Source: ${String.fromCharCode(0x2068)}London Unified Prayer '
+        'Timetable (East London Mosque)',
       ),
       findsOneWidget,
     );
@@ -189,6 +207,24 @@ void main() {
     });
   });
 
+  testWidgets('hands the home-screen widgets the times on screen, and again '
+      'when the app comes back to the front', (tester) async {
+    final published = <Map<String, dynamic>>[];
+    await pumpHome(
+      tester,
+      publishWidgets: (json) async =>
+          published.add(jsonDecode(json) as Map<String, dynamic>),
+    );
+
+    expect(published.single['place'], 'London');
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+
+    expect(published, hasLength(2));
+  });
+
   testWidgets('says "Your location" for times calculated for my spot', (
     tester,
   ) async {
@@ -234,21 +270,6 @@ void main() {
         find.text('This timetable only publishes the standard Asr time.'),
         findsOneWidget,
       );
-    });
-
-    testWidgets('credits the Umm al-Qura Calendar in both languages', (
-      tester,
-    ) async {
-      await pumpHome(tester, place: ValueNotifier(riyadh), loadTimes: saudi);
-      expect(find.text('Source: Umm al-Qura Calendar'), findsOneWidget);
-
-      await pumpHome(
-        tester,
-        place: ValueNotifier(riyadh),
-        loadTimes: saudi,
-        locale: const Locale('ar'),
-      );
-      expect(find.text('المصدر: تقويم أم القرى'), findsOneWidget);
     });
   });
 
@@ -304,7 +325,7 @@ void main() {
     expect(find.text('الفجر'), findsOneWidget);
     expect(find.text('العصر بعد 2:08:00'), findsOneWidget);
     expect(find.textContaining('جمادى الأولى'), findsOneWidget);
-    expect(find.textContaining('المصدر:'), findsOneWidget);
+    expect(find.textContaining('المصدر:'), findsNothing); // it's in Settings
   });
 
   testWidgets('tells screen readers which column each time is in', (

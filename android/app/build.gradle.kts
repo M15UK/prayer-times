@@ -53,4 +53,8 @@ flutter {
 dependencies {
     // Version from the flutter_local_notifications 22.3.3 setup guide.
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    // The widget's pure Kotlin is tested on the computer, with the real
+    // org.json: Android's own copy is only a stub there.
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20250517")
 }
