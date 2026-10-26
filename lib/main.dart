@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer' show log;
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -8,8 +9,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
 import 'package:prayer_times/data/device_location.dart';
+import 'package:prayer_times/data/phone_notifications.dart';
 import 'package:prayer_times/data/place.dart';
 import 'package:prayer_times/data/place_times.dart';
+import 'package:prayer_times/data/prayer_alerts.dart';
 import 'package:prayer_times/data/saved_place.dart';
 import 'package:prayer_times/data/saved_setting.dart';
 import 'package:prayer_times/data/timetable.dart';
@@ -34,6 +37,13 @@ Future<void> main() async {
   );
   final storage = await SharedPreferences.getInstance();
   final place = SavedPlace(storage, places: places);
+  final notifications = PhoneNotifications();
+  try {
+    await notifications.start();
+  } on PlatformException catch (error, stack) {
+    // The prayer times matter more than the alerts: open the app anyway.
+    log('Starting notifications failed', error: error, stackTrace: stack);
+  }
   runApp(
     PrayerTimesApp(
       loadTimes: (chosen, now) => loadPlaceTimes(
@@ -59,6 +69,13 @@ Future<void> main() async {
         values: AppLanguage.values,
         fallback: AppLanguage.phone,
       ),
+      alerts: SavedSetting(
+        storage,
+        key: 'prayerAlerts',
+        values: PrayerAlerts.values,
+        fallback: PrayerAlerts.askFirst,
+      ),
+      notifications: notifications,
     ),
   );
 }
@@ -71,6 +88,8 @@ class PrayerTimesApp extends StatelessWidget {
     required this.places,
     required this.asrMethod,
     required this.language,
+    required this.alerts,
+    required this.notifications,
     this.isFirstLaunch = false,
   });
 
@@ -84,6 +103,10 @@ class PrayerTimesApp extends StatelessWidget {
   /// The user's choices, shared by the main and settings screens.
   final ValueNotifier<AsrMethod> asrMethod;
   final ValueNotifier<AppLanguage> language;
+  final ValueNotifier<PrayerAlerts> alerts;
+
+  /// The phone's notifications, for the prayer alerts.
+  final PhoneNotifications notifications;
 
   /// True on the app's very first run.
   final bool isFirstLaunch;
@@ -114,6 +137,8 @@ class PrayerTimesApp extends StatelessWidget {
           isFirstLaunch: isFirstLaunch,
           asrMethod: asrMethod,
           language: language,
+          alerts: alerts,
+          notifications: notifications,
         ),
       ),
     );

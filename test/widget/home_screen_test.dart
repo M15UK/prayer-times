@@ -9,6 +9,7 @@ import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:prayer_times/data/calculated_timetable.dart';
 import 'package:prayer_times/data/place.dart';
 import 'package:prayer_times/data/place_times.dart';
+import 'package:prayer_times/data/prayer_alerts.dart';
 import 'package:prayer_times/data/saved_place.dart';
 import 'package:prayer_times/data/timetable.dart';
 import 'package:prayer_times/l10n/app_language.dart';
@@ -17,6 +18,7 @@ import 'package:prayer_times/screens/home_screen.dart';
 
 import '../unit/data/sample_places.dart';
 import '../unit/data/sample_timetable.dart';
+import 'fake_notifications.dart';
 
 /// 12:09 London time on 25 October 2026 (London is on GMT that day).
 final lunchtime = DateTime.utc(2026, 10, 25, 12, 9);
@@ -37,6 +39,8 @@ Future<void> pumpHome(
   ValueNotifier<Place?>? place,
   bool isFirstLaunch = false,
   AsrMethod asr = AsrMethod.standard,
+  PrayerAlerts alerts = PrayerAlerts.on,
+  FakeNotifications? notifications,
   DateTime? now,
   Locale locale = const Locale('en'),
 }) async {
@@ -56,6 +60,8 @@ Future<void> pumpHome(
         isFirstLaunch: isFirstLaunch,
         asrMethod: ValueNotifier(asr),
         language: ValueNotifier(AppLanguage.phone),
+        alerts: ValueNotifier(alerts),
+        notifications: notifications ?? FakeNotifications(),
         now: () => now ?? lunchtime,
       ),
     ),
@@ -137,6 +143,50 @@ void main() {
 
     expect(asked, [london, riyadh]);
     expect(find.text('Riyadh'), findsOneWidget);
+  });
+
+  group('prayer alerts', () {
+    testWidgets('asks permission once the first times load, then hands the '
+        'phone alerts for them', (tester) async {
+      final phone = FakeNotifications();
+
+      await pumpHome(
+        tester,
+        alerts: PrayerAlerts.askFirst,
+        notifications: phone,
+      );
+
+      expect(phone.asked, ['notify']);
+      expect(phone.replaced.single.first.title, 'Asr');
+      expect(phone.replaced.single.first.body, '14:17 · London');
+    });
+
+    testWidgets('follow a newly chosen place', (tester) async {
+      final phone = FakeNotifications();
+      await pumpHome(tester, notifications: phone);
+
+      await tester.tap(find.text('London'));
+      await finishTransition(tester);
+      await tester.tap(find.text('Riyadh'));
+      await finishTransition(tester);
+
+      expect(phone.replaced.last.first.body, endsWith(' · Riyadh'));
+      // Already answered (alerts on), so never asked again.
+      expect(phone.asked, isEmpty);
+    });
+
+    testWidgets('are planned again when the app comes back to the front', (
+      tester,
+    ) async {
+      final phone = FakeNotifications();
+      await pumpHome(tester, notifications: phone);
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+
+      expect(phone.replaced, hasLength(2));
+    });
   });
 
   testWidgets('says "Your location" for times calculated for my spot', (

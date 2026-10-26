@@ -5,6 +5,12 @@
     <!-- Approximate (city-level) location only: enough to find the nearest
          official timetable. The exact position never leaves the phone. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!-- Prayer alerts: set them again after the phone restarts, and ring at
+         the exact minute. Exact alarms are off by default on Android 14+;
+         the app explains and asks. (The notifications plugin declares
+         POST_NOTIFICATIONS and VIBRATE itself.) -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <application
         android:label="prayer_times"
         android:name="${applicationName}"
@@ -31,6 +37,18 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Show the scheduled prayer alerts, and set them again after a
+             restart or an app update. Not exported: other apps can't
+             trigger them. -->
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
+            </intent-filter>
+        </receiver>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

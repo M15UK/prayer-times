@@ -155,4 +155,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get retry => 'Try again';
+
+  @override
+  String get prayerAlerts => 'Prayer alerts';
+
+  @override
+  String get prayerAlertsHint =>
+      'A notification when each of the five prayers starts';
+
+  @override
+  String get exactAlarmExplain =>
+      'To alert you exactly when each prayer starts, Android asks you to allow \"Alarms and reminders\" for this app. Without it, alerts may come late.';
+
+  @override
+  String get continueLabel => 'Continue';
+
+  @override
+  String get notNow => 'Not now';
+
+  @override
+  String get alertsMayBeLate =>
+      'Prayer alerts may come late. You can allow exact timing in the phone\'s settings.';
+
+  @override
+  String get notificationsBlocked =>
+      'Notifications aren\'t allowed for this app, so prayer alerts are off. You can allow them in the phone\'s settings.';
 }

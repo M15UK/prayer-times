@@ -94,8 +94,8 @@ abstract class AppLocalizations {
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
-    Locale('ar'),
     Locale('en'),
+    Locale('ar'),
   ];
 
   /// App name, shown in the top bar and the phone's app switcher.
@@ -331,6 +331,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try again'**
   String get retry;
+
+  /// No description provided for @prayerAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayer alerts'**
+  String get prayerAlerts;
+
+  /// No description provided for @prayerAlertsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A notification when each of the five prayers starts'**
+  String get prayerAlertsHint;
+
+  /// No description provided for @exactAlarmExplain.
+  ///
+  /// In en, this message translates to:
+  /// **'To alert you exactly when each prayer starts, Android asks you to allow \"Alarms and reminders\" for this app. Without it, alerts may come late.'**
+  String get exactAlarmExplain;
+
+  /// No description provided for @continueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueLabel;
+
+  /// No description provided for @notNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get notNow;
+
+  /// No description provided for @alertsMayBeLate.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayer alerts may come late. You can allow exact timing in the phone\'s settings.'**
+  String get alertsMayBeLate;
+
+  /// No description provided for @notificationsBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications aren\'t allowed for this app, so prayer alerts are off. You can allow them in the phone\'s settings.'**
+  String get notificationsBlocked;
 }
 
 class _AppLocalizationsDelegate

@@ -3,3 +3,5 @@ template-arb-file: app_en.arb
 output-localization-file: app_localizations.dart
 # AppLocalizations.of(context) never returns null, so no `!` is needed.
 nullable-getter: false
+# English first: a phone in a language the app doesn't speak gets English.
+preferred-supported-locales: [en]
