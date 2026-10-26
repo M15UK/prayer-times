@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Text Android shows before the app has run: the widget picker's names,
+     and the widgets' message until the app has saved some times. Everything
+     else on the widgets comes from the app, in the app's language. -->
+<resources>
+    <string name="widget_next_name">Next prayer</string>
+    <string name="widget_today_name">Today\'s prayer times</string>
+    <string name="widget_open_app">Open the app to show the times</string>
+</resources>

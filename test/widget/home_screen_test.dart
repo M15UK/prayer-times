@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ import 'package:prayer_times/data/place_times.dart';
 import 'package:prayer_times/data/prayer_alerts.dart';
 import 'package:prayer_times/data/saved_place.dart';
 import 'package:prayer_times/data/timetable.dart';
+import 'package:prayer_times/data/widget_publisher.dart';
 import 'package:prayer_times/l10n/app_language.dart';
 import 'package:prayer_times/l10n/app_localizations.dart';
 import 'package:prayer_times/screens/home_screen.dart';
@@ -41,6 +43,7 @@ Future<void> pumpHome(
   AsrMethod asr = AsrMethod.standard,
   PrayerAlerts alerts = PrayerAlerts.on,
   FakeNotifications? notifications,
+  Future<void> Function(String json) publishWidgets = noWidgets,
   DateTime? now,
   Locale locale = const Locale('en'),
 }) async {
@@ -62,6 +65,7 @@ Future<void> pumpHome(
         language: ValueNotifier(AppLanguage.phone),
         alerts: ValueNotifier(alerts),
         notifications: notifications ?? FakeNotifications(),
+        publishWidgets: publishWidgets,
         now: () => now ?? lunchtime,
       ),
     ),
@@ -187,6 +191,24 @@ void main() {
 
       expect(phone.replaced, hasLength(2));
     });
+  });
+
+  testWidgets('hands the home-screen widgets the times on screen, and again '
+      'when the app comes back to the front', (tester) async {
+    final published = <Map<String, dynamic>>[];
+    await pumpHome(
+      tester,
+      publishWidgets: (json) async =>
+          published.add(jsonDecode(json) as Map<String, dynamic>),
+    );
+
+    expect(published.single['place'], 'London');
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+
+    expect(published, hasLength(2));
   });
 
   testWidgets('says "Your location" for times calculated for my spot', (

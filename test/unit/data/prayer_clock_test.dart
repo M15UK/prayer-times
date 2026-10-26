@@ -32,6 +32,18 @@ void main() {
     expect(dateIn(tz.getLocation('Europe/London'), newYearsEve), '2027-01-01');
   });
 
+  test("datesFrom counts calendar days from the place's own date", () {
+    // 21:30 UTC on New Year's Eve is already 1 January in Riyadh.
+    expect(
+      datesFrom(
+        tz.getLocation('Asia/Riyadh'),
+        DateTime.utc(2026, 12, 31, 21, 30),
+        3,
+      ),
+      ['2027-01-01', '2027-01-02', '2027-01-03'],
+    );
+  });
+
   group('nextPrayer', () {
     test('is Asr just after Dhuhr', () {
       final next = nextPrayer(

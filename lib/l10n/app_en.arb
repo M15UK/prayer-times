@@ -82,5 +82,6 @@
   "continueLabel": "Continue",
   "notNow": "Not now",
   "alertsMayBeLate": "Prayer alerts may come late. You can allow exact timing in the phone's settings.",
-  "notificationsBlocked": "Notifications aren't allowed for this app, so prayer alerts are off. You can allow them in the phone's settings."
+  "notificationsBlocked": "Notifications aren't allowed for this app, so prayer alerts are off. You can allow them in the phone's settings.",
+  "widgetOpenApp": "Open the app to update the times"
 }

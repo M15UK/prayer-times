@@ -180,4 +180,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notificationsBlocked =>
       'Notifications aren\'t allowed for this app, so prayer alerts are off. You can allow them in the phone\'s settings.';
+
+  @override
+  String get widgetOpenApp => 'Open the app to update the times';
 }

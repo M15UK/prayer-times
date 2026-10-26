@@ -176,4 +176,7 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get notificationsBlocked =>
       'الإشعارات غير مسموح بها لهذا التطبيق، لذلك تنبيهات الصلاة متوقفة. يمكنك السماح بها من إعدادات الهاتف.';
+
+  @override
+  String get widgetOpenApp => 'افتح التطبيق لتحديث المواقيت';
 }

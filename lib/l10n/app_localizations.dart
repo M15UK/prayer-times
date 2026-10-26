@@ -373,6 +373,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Notifications aren\'t allowed for this app, so prayer alerts are off. You can allow them in the phone\'s settings.'**
   String get notificationsBlocked;
+
+  /// No description provided for @widgetOpenApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the app to update the times'**
+  String get widgetOpenApp;
 }
 
 class _AppLocalizationsDelegate

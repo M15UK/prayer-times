@@ -17,6 +17,8 @@ import 'package:prayer_times/data/saved_place.dart';
 import 'package:prayer_times/data/saved_setting.dart';
 import 'package:prayer_times/data/timetable.dart';
 import 'package:prayer_times/data/timetable_repository.dart';
+import 'package:prayer_times/data/widget_channel.dart';
+import 'package:prayer_times/data/widget_publisher.dart';
 import 'package:prayer_times/l10n/app_language.dart';
 import 'package:prayer_times/l10n/app_localizations.dart';
 import 'package:prayer_times/screens/home_screen.dart';
@@ -76,6 +78,7 @@ Future<void> main() async {
         fallback: PrayerAlerts.askFirst,
       ),
       notifications: notifications,
+      publishWidgets: publishToAndroidWidgets,
     ),
   );
 }
@@ -90,6 +93,7 @@ class PrayerTimesApp extends StatelessWidget {
     required this.language,
     required this.alerts,
     required this.notifications,
+    this.publishWidgets = noWidgets,
     this.isFirstLaunch = false,
   });
 
@@ -107,6 +111,9 @@ class PrayerTimesApp extends StatelessWidget {
 
   /// The phone's notifications, for the prayer alerts.
   final PhoneNotifications notifications;
+
+  /// Hands the home-screen widgets their payload (JSON).
+  final Future<void> Function(String json) publishWidgets;
 
   /// True on the app's very first run.
   final bool isFirstLaunch;
@@ -139,6 +146,7 @@ class PrayerTimesApp extends StatelessWidget {
           language: language,
           alerts: alerts,
           notifications: notifications,
+          publishWidgets: publishWidgets,
         ),
       ),
     );

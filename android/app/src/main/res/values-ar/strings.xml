@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_next_name">الصلاة القادمة</string>
+    <string name="widget_today_name">مواقيت الصلاة اليوم</string>
+    <string name="widget_open_app">افتح التطبيق لعرض المواقيت</string>
+</resources>
