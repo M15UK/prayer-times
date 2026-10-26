@@ -2,6 +2,6 @@
 <!-- The widgets' card: dark teal, like the app's colours, with round corners. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="#E6162B2A" />
+    <solid android:color="@color/widget_card" />
     <corners android:radius="16dp" />
 </shape>

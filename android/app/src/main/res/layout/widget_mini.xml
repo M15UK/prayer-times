@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mini (2×1): a small live clock, the next prayer and its time. Also the
+     picker's preview, so it holds sample text; the widget code replaces all
+     of it before a real widget is shown. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_badge"
+    android:paddingStart="14dp"
+    android:paddingTop="4dp"
+    android:paddingEnd="14dp"
+    android:paddingBottom="4dp">
+
+    <TextView
+        android:id="@+id/message"
+        style="@style/WidgetText.Message" />
+
+    <LinearLayout
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!-- First, so the clock is cut before the mark ever is. -->
+            <TextView
+                android:id="@+id/calculated"
+                style="@style/WidgetText.Calculated"
+                android:layout_marginStart="0dp"
+                android:layout_marginEnd="6dp" />
+
+            <TextClock
+                style="@style/WidgetText.Quiet"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:format12Hour="h:mm"
+                android:format24Hour="HH:mm"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/next_name"
+            style="@style/WidgetText.Quiet"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sample_asr"
+            android:textAllCaps="true"
+            android:textSize="11sp" />
+
+        <TextView
+            android:id="@+id/next_time"
+            style="@style/WidgetText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sample_time3"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+</FrameLayout>

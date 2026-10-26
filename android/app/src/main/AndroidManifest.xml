@@ -49,31 +49,75 @@
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
             </intent-filter>
         </receiver>
-        <!-- The two home-screen widgets, and the receiver that redraws them at
-             each prayer and midnight, and after a restart, an app update or
-             a change of the phone's clock. Not exported: only Android itself
-             sends to them. -->
+        <!-- The six home-screen widget styles (WidgetStyles.kt), and the
+             receiver that redraws them at each prayer and midnight, and after
+             a restart, an app update or a change of the phone's clock. Not
+             exported: only Android itself sends to them. -->
         <receiver
-            android:name=".widget.NextPrayerWidget"
+            android:name=".widget.MiniWidget"
             android:exported="false"
-            android:label="@string/widget_next_name">
+            android:label="@string/widget_mini_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/next_prayer_widget_info" />
+                android:resource="@xml/mini_widget_info" />
         </receiver>
         <receiver
-            android:name=".widget.TodayWidget"
+            android:name=".widget.DateLocationWidget"
             android:exported="false"
-            android:label="@string/widget_today_name">
+            android:label="@string/widget_date_location_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/today_widget_info" />
+                android:resource="@xml/date_location_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.PrayerStripWidget"
+            android:exported="false"
+            android:label="@string/widget_strip_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/strip_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.FullHorizontalWidget"
+            android:exported="false"
+            android:label="@string/widget_full_horizontal_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/full_horizontal_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.DigitalClockWidget"
+            android:exported="false"
+            android:label="@string/widget_digital_clock_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/digital_clock_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.FullVerticalWidget"
+            android:exported="false"
+            android:label="@string/widget_full_vertical_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/full_vertical_widget_info" />
         </receiver>
         <receiver android:name=".widget.RefreshReceiver" android:exported="false">
             <intent-filter>

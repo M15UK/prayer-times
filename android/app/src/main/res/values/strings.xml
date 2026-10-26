@@ -1,9 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Text Android shows before the app has run: the widget picker's names,
-     and the widgets' message until the app has saved some times. Everything
-     else on the widgets comes from the app, in the app's language. -->
+<!-- Text Android shows before the app has run: the widget picker's names and
+     previews, and the widgets' message until the app has saved some times.
+     Everything else on the widgets comes from the app, in its language. -->
 <resources>
-    <string name="widget_next_name">Next prayer</string>
-    <string name="widget_today_name">Today\'s prayer times</string>
     <string name="widget_open_app">Open the app to show the times</string>
+
+    <string name="widget_mini_name">Next prayer (mini)</string>
+    <string name="widget_date_location_name">Date and location</string>
+    <string name="widget_strip_name">Prayer strip</string>
+    <string name="widget_full_horizontal_name">Full horizontal</string>
+    <string name="widget_digital_clock_name">Digital clock</string>
+    <string name="widget_full_vertical_name">Full vertical</string>
+
+    <!-- Previews only. -->
+    <string name="sample_fajr">Fajr</string>
+    <string name="sample_sunrise">Sunrise</string>
+    <string name="sample_dhuhr">Dhuhr</string>
+    <string name="sample_asr">Asr</string>
+    <string name="sample_maghrib">Maghrib</string>
+    <string name="sample_isha">Isha</string>
+    <string name="sample_place">London</string>
+    <string name="sample_date">Mon 26 Oct</string>
+    <string name="sample_hijri">15 Jum I</string>
 </resources>

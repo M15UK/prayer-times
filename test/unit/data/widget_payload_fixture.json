@@ -1,14 +1,16 @@
 {
-  "v": 1,
+  "v": 2,
   "rtl": false,
+  "lang": "en",
   "place": "London",
-  "placeLine": "London",
-  "source": "Source: ⁨London Unified Prayer Timetable (East London Mosque)⁩",
+  "calculated": "",
   "openApp": "Open the app to update the times",
   "days": [
     {
       "start": 1792882800000,
       "end": 1792972800000,
+      "date": "Sun 25 Oct",
+      "hijri": "14 Jum I",
       "rows": [
         {"name": "Fajr", "time": "05:04", "at": 1792904640000, "counts": true},
         {"name": "Sunrise", "time": "06:39", "at": 1792910340000, "counts": false},
@@ -21,6 +23,8 @@
     {
       "start": 1792972800000,
       "end": 1793059200000,
+      "date": "Mon 26 Oct",
+      "hijri": "15 Jum I",
       "rows": [
         {"name": "Fajr", "time": "05:05", "at": 1792991100000, "counts": true},
         {"name": "Sunrise", "time": "06:41", "at": 1792996860000, "counts": false},

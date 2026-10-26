@@ -84,11 +84,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   /// Keeps the home-screen widgets in step with what this screen shows.
   late final WidgetPublisher _widgets;
 
+  /// The timetable on screen, for Settings to name its source.
+  Timetable? _shown;
+
   /// Starts loading. Times that load go on to the alerts. The screen shows
   /// any error; it is also logged, so an unexpected one is never invisible
   /// (and never counts as "unhandled" in the moment before the screen
   /// listens).
   Future<ResolvedTimes> _load() {
+    _shown = null; // until the new times arrive
     final times = widget.loadTimes(widget.place.value, widget.now());
     unawaited(
       times.then<void>(
@@ -105,6 +109,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _afterLoad(ResolvedTimes times) async {
     if (!mounted) return;
     // Before the permission question, which can take a while to answer.
+    _shown = times.timetable;
     _widgets.timesLoaded(times);
     if (widget.alerts.value == PrayerAlerts.askFirst) {
       await turnOnAlerts(
@@ -205,6 +210,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         asrMethod: widget.asrMethod,
         alerts: widget.alerts,
         notifications: widget.notifications,
+        timetable: _shown,
       ),
     ),
   );
@@ -326,7 +332,9 @@ class _TodayView extends StatelessWidget {
         if (asr == AsrMethod.hanafi && day.asrHanafi == null)
           Text(text.hanafiNotPublished, style: smallText),
         const SizedBox(height: 16),
-        _SourceLabel(timetable: timetable),
+        // Official sources are named in Settings; calculated times must
+        // always say so here.
+        if (isCalculated(timetable)) _SourceLabel(timetable: timetable),
       ],
     );
   }
@@ -394,8 +402,8 @@ class _PlaceButton extends StatelessWidget {
   }
 }
 
-/// Where the times came from. Calculated times say so, with an icon, so
-/// they can never be mistaken for an official timetable.
+/// Shown only for calculated times: says so, with an icon, so they can never
+/// be mistaken for an official timetable.
 class _SourceLabel extends StatelessWidget {
   const _SourceLabel({required this.timetable});
 
@@ -406,10 +414,8 @@ class _SourceLabel extends StatelessWidget {
     final style = Theme.of(context).textTheme.bodySmall;
     return Row(
       children: [
-        if (isCalculated(timetable)) ...[
-          Icon(Icons.calculate_outlined, size: 16, color: style?.color),
-          const SizedBox(width: 4),
-        ],
+        Icon(Icons.calculate_outlined, size: 16, color: style?.color),
+        const SizedBox(width: 4),
         Expanded(
           child: Text(
             sourceLine(timetable, AppLocalizations.of(context)),

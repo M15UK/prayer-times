@@ -379,6 +379,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open the app to update the times'**
   String get widgetOpenApp;
+
+  /// No description provided for @calculatedMark.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculated'**
+  String get calculatedMark;
+
+  /// Short Hijri month name for the widgets; month is m1 to m12.
+  ///
+  /// In en, this message translates to:
+  /// **'{month, select, m1{Muh} m2{Saf} m3{Rabi I} m4{Rabi II} m5{Jum I} m6{Jum II} m7{Raj} m8{Sha} m9{Ram} m10{Shaw} m11{Dhul Q} m12{Dhul H} other{}}'**
+  String hijriMonthShort(String month);
 }
 
 class _AppLocalizationsDelegate

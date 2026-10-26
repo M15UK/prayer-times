@@ -23,7 +23,11 @@ class WidgetPayloadTest {
     fun readsTheAppsPayload() {
         assertEquals("London", payload.place)
         assertFalse(payload.rtl)
+        assertEquals("en", payload.lang)
+        assertEquals("", payload.calculated) // official times: no mark
         assertEquals(2, payload.days.size)
+        assertEquals("Sun 25 Oct", payload.days[0].date)
+        assertEquals("14 Jum I", payload.days[0].hijri)
         assertEquals(
             listOf("Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"),
             payload.days[0].rows.map { it.name },
@@ -110,7 +114,8 @@ class WidgetPayloadTest {
 
     @Test
     fun rejectsAnotherVersionOrBrokenText() {
-        assertNull(parsePayload("""{"v":2}"""))
+        assertNull(parsePayload("""{"v":1}""")) // saved by the previous version
+        assertNull(parsePayload("""{"v":3}"""))
         assertNull(parsePayload("not json"))
         assertNull(parsePayload(null))
     }
@@ -119,6 +124,6 @@ class WidgetPayloadTest {
         const val DAY_MS = 24 * 60 * 60 * 1000L
 
         /** The same day [ms] later, for building a gap between saved days. */
-        fun Day.movedBy(ms: Long) = Day(start + ms, end + ms, rows.map { it.copy(at = it.at + ms) })
+        fun Day.movedBy(ms: Long) = copy(start = start + ms, end = end + ms, rows = rows.map { it.copy(at = it.at + ms) })
     }
 }

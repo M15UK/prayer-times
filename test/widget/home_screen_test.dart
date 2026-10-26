@@ -85,9 +85,8 @@ Future<void> finishTransition(WidgetTester tester) async {
 void main() {
   setUpAll(tzdata.initializeTimeZones);
 
-  testWidgets("shows today's times, dates, source and countdown", (
-    tester,
-  ) async {
+  testWidgets("shows today's times, dates and countdown, but not the source "
+      'of official times', (tester) async {
     await pumpHome(tester);
 
     expect(find.text('London'), findsOneWidget); // the place button
@@ -100,8 +99,23 @@ void main() {
     expect(find.text('Sunday 25 October 2026'), findsOneWidget);
     expect(find.textContaining('14 Jumada al-Ula 1448 AH'), findsOneWidget);
     expect(
+      find.textContaining('London Unified Prayer Timetable'),
+      findsNothing,
+    );
+  });
+
+  testWidgets('shows the source of the times on screen in Settings', (
+    tester,
+  ) async {
+    await pumpHome(tester);
+
+    await tester.tap(find.byTooltip('Settings'));
+    await finishTransition(tester);
+
+    expect(
       find.textContaining(
-        'London Unified Prayer Timetable (East London Mosque)',
+        'Source: ${String.fromCharCode(0x2068)}London Unified Prayer '
+        'Timetable (East London Mosque)',
       ),
       findsOneWidget,
     );
@@ -257,21 +271,6 @@ void main() {
         findsOneWidget,
       );
     });
-
-    testWidgets('credits the Umm al-Qura Calendar in both languages', (
-      tester,
-    ) async {
-      await pumpHome(tester, place: ValueNotifier(riyadh), loadTimes: saudi);
-      expect(find.text('Source: Umm al-Qura Calendar'), findsOneWidget);
-
-      await pumpHome(
-        tester,
-        place: ValueNotifier(riyadh),
-        loadTimes: saudi,
-        locale: const Locale('ar'),
-      );
-      expect(find.text('المصدر: تقويم أم القرى'), findsOneWidget);
-    });
   });
 
   testWidgets('labels calculated times clearly, in both languages', (
@@ -326,7 +325,7 @@ void main() {
     expect(find.text('الفجر'), findsOneWidget);
     expect(find.text('العصر بعد 2:08:00'), findsOneWidget);
     expect(find.textContaining('جمادى الأولى'), findsOneWidget);
-    expect(find.textContaining('المصدر:'), findsOneWidget);
+    expect(find.textContaining('المصدر:'), findsNothing); // it's in Settings
   });
 
   testWidgets('tells screen readers which column each time is in', (

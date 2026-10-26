@@ -2,13 +2,13 @@
 /// right with the app closed. Pure Dart, so it can be tested without a phone.
 library;
 
-import 'package:intl/intl.dart' show Bidi;
+import 'package:hijri/hijri_calendar.dart';
+import 'package:intl/intl.dart' show Bidi, DateFormat;
 import 'package:timezone/timezone.dart' as tz;
 
 import 'package:prayer_times/data/calculated_timetable.dart';
 import 'package:prayer_times/data/place_times.dart';
 import 'package:prayer_times/data/prayer_clock.dart';
-import 'package:prayer_times/data/source_line.dart';
 import 'package:prayer_times/data/timetable.dart';
 import 'package:prayer_times/l10n/app_localizations.dart';
 import 'package:prayer_times/l10n/prayer_name.dart';
@@ -17,7 +17,7 @@ import 'package:prayer_times/l10n/prayer_name.dart';
 const widgetDays = 30;
 
 /// The payload's format. The widget ignores any other version.
-const widgetPayloadVersion = 1;
+const widgetPayloadVersion = 2;
 
 /// Everything the widgets show for the next [widgetDays] days of [times]:
 /// ready-made text in [text]'s language, and each moment in milliseconds
@@ -30,37 +30,50 @@ Map<String, Object> widgetPayload({
 }) {
   final timetable = times.timetable;
   final zone = tz.getLocation(timetable.timeZone);
-  final place = times.place?.nameFor(text.localeName) ?? text.yourLocation;
   // One date more than shown: each day ends where the next one begins.
   final dates = datesFrom(zone, now, widgetDays + 1);
   return {
     'v': widgetPayloadVersion,
     'rtl': Bidi.isRtlLanguage(text.localeName),
-    'place': place,
-    // The small widget has no source line, so it says "calculated" here,
-    // first: on a narrow widget only the place name may be cut short.
-    'placeLine': [
-      if (isCalculated(timetable)) text.calculated,
-      place,
-    ].join(' · '),
-    'source': sourceLine(timetable, text),
+    // For the phone's AM/PM words in 12-hour time.
+    'lang': text.localeName,
+    'place': times.place?.nameFor(text.localeName) ?? text.yourLocation,
+    // Every widget shows this mark, so calculated times never look official.
+    'calculated': isCalculated(timetable) ? text.calculatedMark : '',
     'openApp': text.widgetOpenApp,
     'days': [
       for (var i = 0; i < widgetDays; i++)
         if (timetable.days[dates[i]] case final day?)
+          _day(zone, dates[i], dates[i + 1], day, asr, text),
+    ],
+  };
+}
+
+/// One day: when it starts and ends, its two dates, and its six times.
+Map<String, Object> _day(
+  tz.Location zone,
+  String date,
+  String nextDate,
+  DayTimes day,
+  AsrMethod asr,
+  AppLocalizations text,
+) {
+  final calendarDate = DateTime.parse(date);
+  // The same Umm al-Qura date the app shows, with a short month name.
+  final hijri = HijriCalendar.fromDate(calendarDate);
+  return {
+    'start': _ms(zone, date, '00:00'),
+    'end': _ms(zone, nextDate, '00:00'),
+    'date': DateFormat('EEE d MMM', text.localeName).format(calendarDate),
+    'hijri': '${hijri.hDay} ${text.hijriMonthShort('m${hijri.hMonth}')}',
+    'rows': [
+      for (final prayer in Prayer.values)
+        if (day.startOf(prayer, asr) case final time?)
           {
-            'start': _ms(zone, dates[i], '00:00'),
-            'end': _ms(zone, dates[i + 1], '00:00'),
-            'rows': [
-              for (final prayer in Prayer.values)
-                if (day.startOf(prayer, asr) case final time?)
-                  {
-                    'name': prayerName(text, prayer),
-                    'time': time,
-                    'at': _ms(zone, dates[i], time),
-                    'counts': countdownPrayers.contains(prayer),
-                  },
-            ],
+            'name': prayerName(text, prayer),
+            'time': time,
+            'at': _ms(zone, date, time),
+            'counts': countdownPrayers.contains(prayer),
           },
     ],
   };

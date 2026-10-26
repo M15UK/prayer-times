@@ -1,6 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="widget_next_name">الصلاة القادمة</string>
-    <string name="widget_today_name">مواقيت الصلاة اليوم</string>
     <string name="widget_open_app">افتح التطبيق لعرض المواقيت</string>
+
+    <string name="widget_mini_name">الصلاة القادمة (مصغّر)</string>
+    <string name="widget_date_location_name">التاريخ والموقع</string>
+    <string name="widget_strip_name">شريط الصلوات</string>
+    <string name="widget_full_horizontal_name">أفقي كامل</string>
+    <string name="widget_digital_clock_name">ساعة رقمية</string>
+    <string name="widget_full_vertical_name">عمودي كامل</string>
+
+    <string name="sample_fajr">الفجر</string>
+    <string name="sample_sunrise">الشروق</string>
+    <string name="sample_dhuhr">الظهر</string>
+    <string name="sample_asr">العصر</string>
+    <string name="sample_maghrib">المغرب</string>
+    <string name="sample_isha">العشاء</string>
+    <string name="sample_place">لندن</string>
+    <string name="sample_date">الاثنين 26 أكتوبر</string>
+    <string name="sample_hijri">15 جمادى الأولى</string>
 </resources>

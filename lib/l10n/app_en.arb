@@ -83,5 +83,11 @@
   "notNow": "Not now",
   "alertsMayBeLate": "Prayer alerts may come late. You can allow exact timing in the phone's settings.",
   "notificationsBlocked": "Notifications aren't allowed for this app, so prayer alerts are off. You can allow them in the phone's settings.",
-  "widgetOpenApp": "Open the app to update the times"
+  "widgetOpenApp": "Open the app to update the times",
+  "calculatedMark": "Calculated",
+  "hijriMonthShort": "{month, select, m1{Muh} m2{Saf} m3{Rabi I} m4{Rabi II} m5{Jum I} m6{Jum II} m7{Raj} m8{Sha} m9{Ram} m10{Shaw} m11{Dhul Q} m12{Dhul H} other{}}",
+  "@hijriMonthShort": {
+    "description": "Short Hijri month name for the widgets; month is m1 to m12.",
+    "placeholders": {"month": {"type": "String"}}
+  }
 }

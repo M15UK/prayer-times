@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
 import 'package:prayer_times/data/calculated_timetable.dart';
@@ -19,7 +20,11 @@ import 'sample_timetable.dart';
 const widgetPayloadFixture = 'test/unit/data/widget_payload_fixture.json';
 
 void main() {
-  setUpAll(tzdata.initializeTimeZones);
+  setUpAll(() async {
+    tzdata.initializeTimeZones();
+    // The app's screen loads these with its translations; tests load them here.
+    await initializeDateFormatting();
+  });
 
   final english = lookupAppLocalizations(const Locale('en'));
   final arabic = lookupAppLocalizations(const Locale('ar'));
@@ -79,12 +84,8 @@ void main() {
     );
 
     expect(payload['place'], 'Your location');
-    // "Calculated" first: on a narrow widget, only the place name is cut.
-    expect(payload['placeLine'], 'Calculated on this phone · Your location');
-    expect(
-      payload['source'],
-      'Source: Calculated on this phone (Muslim World League method)',
-    );
+    // The widgets show this mark whenever the times aren't official.
+    expect(payload['calculated'], 'Calculated');
     expect(payload['days'], hasLength(widgetDays));
   });
 
@@ -134,10 +135,14 @@ void main() {
       text: arabic,
     );
 
+    final today = (payload['days']! as List).first as Map;
     expect(payload['rtl'], isTrue);
+    expect(payload['lang'], 'ar');
     expect(payload['place'], 'الرياض');
-    expect(payload['source'], 'المصدر: تقويم أم القرى');
+    expect(payload['calculated'], '');
     expect(payload['openApp'], 'افتح التطبيق لتحديث المواقيت');
+    expect(today['date'], contains('أكتوبر'));
+    expect(today['hijri'], '14 جمادى الأولى');
     expect(firstRows(payload).first['name'], 'الفجر');
   });
 }

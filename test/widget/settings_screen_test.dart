@@ -7,27 +7,73 @@ import 'package:prayer_times/l10n/app_language.dart';
 import 'package:prayer_times/l10n/app_localizations.dart';
 import 'package:prayer_times/screens/settings_screen.dart';
 
+import '../unit/data/sample_timetable.dart';
 import 'alert_permission_test.dart' show notificationsBlocked;
 import 'fake_notifications.dart';
 
 void main() {
+  /// Settings with the alerts setting at [alerts], the pretend [phone], and
+  /// the [timetable] on screen (null: no times loaded yet).
   Future<void> pumpSettings(
     WidgetTester tester,
     ValueNotifier<PrayerAlerts> alerts,
-    FakeNotifications phone,
-  ) => tester.pumpWidget(
-    MaterialApp(
-      locale: const Locale('en'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: SettingsScreen(
-        language: ValueNotifier(AppLanguage.phone),
-        asrMethod: ValueNotifier(AsrMethod.standard),
-        alerts: alerts,
-        notifications: phone,
+    FakeNotifications phone, {
+    Timetable? timetable,
+    Locale locale = const Locale('en'),
+  }) {
+    // A tall, phone-like screen, so the whole list is built without scrolling.
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    return tester.pumpWidget(
+      MaterialApp(
+        locale: locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: SettingsScreen(
+          language: ValueNotifier(AppLanguage.phone),
+          asrMethod: ValueNotifier(AsrMethod.standard),
+          alerts: alerts,
+          notifications: phone,
+          timetable: timetable,
+        ),
       ),
-    ),
-  );
+    );
+  }
+
+  group('the source of the times on screen', () {
+    testWidgets('credits the Umm al-Qura Calendar in both languages', (
+      tester,
+    ) async {
+      final alerts = ValueNotifier(PrayerAlerts.on);
+      await pumpSettings(
+        tester,
+        alerts,
+        FakeNotifications(),
+        timetable: sampleSaudiTimetable(),
+      );
+      expect(find.text('Source: Umm al-Qura Calendar'), findsOneWidget);
+
+      await pumpSettings(
+        tester,
+        alerts,
+        FakeNotifications(),
+        timetable: sampleSaudiTimetable(),
+        locale: const Locale('ar'),
+      );
+      expect(find.text('المصدر: تقويم أم القرى'), findsOneWidget);
+    });
+
+    testWidgets('is left out before any times have loaded', (tester) async {
+      await pumpSettings(
+        tester,
+        ValueNotifier(PrayerAlerts.on),
+        FakeNotifications(),
+      );
+
+      expect(find.textContaining('Source'), findsNothing);
+    });
+  });
 
   final alertsSwitch = find.widgetWithText(SwitchListTile, 'Prayer alerts');
 

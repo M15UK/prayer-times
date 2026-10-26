@@ -3,6 +3,7 @@ package com.mesharialsadoun.prayer_times.widget
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
+import android.text.format.DateFormat
 import android.util.Log
 
 private const val PREFS = "prayer_widgets"
@@ -32,15 +33,16 @@ fun refreshWidgets(context: Context) {
     // taken away later, Android says nothing: the 30-minute update fixes it.)
     val countdown = canBeExact(context)
 
+    // Read at every redraw, so a change of the phone's setting shows next time.
+    val is24Hour = DateFormat.is24HourFormat(context)
+
     val manager = AppWidgetManager.getInstance(context)
-    val nextIds = manager.getAppWidgetIds(ComponentName(context, NextPrayerWidget::class.java))
-    val todayIds = manager.getAppWidgetIds(ComponentName(context, TodayWidget::class.java))
-    if (nextIds.isNotEmpty()) {
-        manager.updateAppWidget(nextIds, nextPrayerViews(context, payload, pick, now, countdown))
+    var placed = false
+    for (style in WIDGET_STYLES) {
+        val ids = manager.getAppWidgetIds(ComponentName(context, style.provider))
+        if (ids.isEmpty()) continue
+        placed = true
+        manager.updateAppWidget(ids, styleViews(context, style, payload, pick, now, countdown, is24Hour))
     }
-    if (todayIds.isNotEmpty()) {
-        manager.updateAppWidget(todayIds, todayViews(context, payload, pick, now, countdown))
-    }
-    val placed = nextIds.isNotEmpty() || todayIds.isNotEmpty()
     scheduleWake(context, if (placed) pick?.wakeAt else null)
 }

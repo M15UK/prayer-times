@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
 import 'package:prayer_times/data/place.dart';
@@ -12,7 +13,11 @@ import 'package:prayer_times/l10n/app_localizations.dart';
 import 'sample_timetable.dart';
 
 void main() {
-  setUpAll(tzdata.initializeTimeZones);
+  setUpAll(() async {
+    tzdata.initializeTimeZones();
+    // The app's screen loads these with its translations; tests load them here.
+    await initializeDateFormatting();
+  });
 
   final english = lookupAppLocalizations(const Locale('en'));
   final londonTimes = (timetable: sampleTimetable(), place: london);

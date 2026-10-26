@@ -7,7 +7,7 @@ import android.content.Intent
 import android.os.Build
 import android.util.Log
 
-private const val ACTION_WAKE = "com.mesharialsadoun.prayer_times.widget.WAKE"
+internal const val ACTION_WAKE = "com.mesharialsadoun.prayer_times.widget.WAKE"
 
 /** Android stretches any shorter window to 10 minutes (AlarmManager.setWindow). */
 private const val WINDOW_MS = 10 * 60 * 1000L
