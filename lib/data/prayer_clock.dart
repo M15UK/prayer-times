@@ -30,35 +30,71 @@ tz.TZDateTime momentOf(tz.Location zone, String date, String clockTime) {
   return tz.TZDateTime(zone, day.year, day.month, day.day, hour, minute);
 }
 
-/// The first prayer that starts after [now], looking at today and then
-/// tomorrow in the timetable's own time zone, with Asr chosen by [asr].
-/// Null if the timetable has no more days (e.g. after Isha on 31 December).
-({Prayer prayer, tz.TZDateTime at})? nextPrayer(
+/// One prayer still to come: its [date] and clock [time] as the timetable
+/// shows them, and the real moment [at] which it starts.
+typedef UpcomingPrayer = ({
+  Prayer prayer,
+  String date,
+  String time,
+  tz.TZDateTime at,
+});
+
+/// Every prayer that starts after [now], in order, over [days] calendar days
+/// from today in the timetable's own time zone, with Asr chosen by [asr].
+/// Days missing from the timetable (e.g. after 31 December) are skipped.
+List<UpcomingPrayer> upcomingPrayers(
   Timetable timetable,
   DateTime now, {
   AsrMethod asr = AsrMethod.standard,
+  int days = 2,
 }) {
   final zone = tz.getLocation(timetable.timeZone);
   final today = DateTime.parse(dateIn(zone, now));
-  for (final offset in [0, 1]) {
-    // Built from the calendar date, not by adding 24 hours, which would be
-    // wrong on the 23- and 25-hour days when the clocks change.
-    final date = DateTime.utc(
-      today.year,
-      today.month,
-      today.day + offset,
-    ).toIso8601String().substring(0, 10);
-    final day = timetable.days[date];
-    if (day == null) continue;
-    for (final prayer in countdownPrayers) {
-      if (day.startOf(prayer, asr) case final time?) {
-        final at = momentOf(zone, date, time);
-        if (at.isAfter(now)) return (prayer: prayer, at: at);
-      }
+  return [
+    for (var offset = 0; offset < days; offset++)
+      // Built from the calendar date, not by adding 24 hours, which would be
+      // wrong on the 23- and 25-hour days when the clocks change.
+      ..._prayersOn(
+        timetable,
+        zone,
+        DateTime.utc(
+          today.year,
+          today.month,
+          today.day + offset,
+        ).toIso8601String().substring(0, 10),
+        asr,
+      ),
+  ].where((next) => next.at.isAfter(now)).toList();
+}
+
+/// The five prayers on [date], or none if the timetable lacks that day.
+Iterable<UpcomingPrayer> _prayersOn(
+  Timetable timetable,
+  tz.Location zone,
+  String date,
+  AsrMethod asr,
+) sync* {
+  final day = timetable.days[date];
+  if (day == null) return;
+  for (final prayer in countdownPrayers) {
+    if (day.startOf(prayer, asr) case final time?) {
+      yield (
+        prayer: prayer,
+        date: date,
+        time: time,
+        at: momentOf(zone, date, time),
+      );
     }
   }
-  return null;
 }
+
+/// The first prayer that starts after [now], today or tomorrow.
+/// Null if the timetable has no more days (e.g. after Isha on 31 December).
+UpcomingPrayer? nextPrayer(
+  Timetable timetable,
+  DateTime now, {
+  AsrMethod asr = AsrMethod.standard,
+}) => upcomingPrayers(timetable, now, asr: asr).firstOrNull;
 
 /// "2:08:05" for 2 hours, 8 minutes and 5 seconds.
 String formatCountdown(Duration remaining) {

@@ -75,5 +75,12 @@
   },
   "ummAlQuraCalendar": "Umm al-Qura calendar",
   "loadFailed": "Couldn't load prayer times. Check your internet connection and try again.",
-  "retry": "Try again"
+  "retry": "Try again",
+  "prayerAlerts": "Prayer alerts",
+  "prayerAlertsHint": "A notification when each of the five prayers starts",
+  "exactAlarmExplain": "To alert you exactly when each prayer starts, Android asks you to allow \"Alarms and reminders\" for this app. Without it, alerts may come late.",
+  "continueLabel": "Continue",
+  "notNow": "Not now",
+  "alertsMayBeLate": "Prayer alerts may come late. You can allow exact timing in the phone's settings.",
+  "notificationsBlocked": "Notifications aren't allowed for this app, so prayer alerts are off. You can allow them in the phone's settings."
 }

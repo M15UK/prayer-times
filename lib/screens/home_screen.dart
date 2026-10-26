@@ -6,14 +6,18 @@ import 'package:hijri/hijri_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:timezone/timezone.dart' as tz;
 
+import 'package:prayer_times/data/alert_scheduler.dart';
 import 'package:prayer_times/data/calculated_timetable.dart';
+import 'package:prayer_times/data/phone_notifications.dart';
 import 'package:prayer_times/data/place.dart';
 import 'package:prayer_times/data/place_times.dart';
+import 'package:prayer_times/data/prayer_alerts.dart';
 import 'package:prayer_times/data/prayer_clock.dart';
 import 'package:prayer_times/data/timetable.dart';
 import 'package:prayer_times/l10n/app_language.dart';
 import 'package:prayer_times/l10n/app_localizations.dart';
 import 'package:prayer_times/l10n/prayer_name.dart';
+import 'package:prayer_times/screens/alert_permission.dart';
 import 'package:prayer_times/screens/place_screen.dart';
 import 'package:prayer_times/screens/settings_screen.dart';
 import 'package:prayer_times/screens/times_table.dart';
@@ -28,6 +32,8 @@ class HomeScreen extends StatefulWidget {
     required this.places,
     required this.asrMethod,
     required this.language,
+    required this.alerts,
+    required this.notifications,
     this.isFirstLaunch = false,
     this.now = DateTime.now,
   });
@@ -42,6 +48,10 @@ class HomeScreen extends StatefulWidget {
   /// The user's choices from settings.
   final ValueNotifier<AsrMethod> asrMethod;
   final ValueNotifier<AppLanguage> language;
+  final ValueNotifier<PrayerAlerts> alerts;
+
+  /// The phone's notifications, for the prayer alerts.
+  final PhoneNotifications notifications;
 
   /// True on the app's very first run: if there's no location then, the
   /// place list opens by itself.
@@ -54,7 +64,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   // shortcut: loads once; if the app stays open across midnight on
   // 31 December, "Try again" loads the new year. Fix when adding refresh.
   late Future<ResolvedTimes> _times;
@@ -62,14 +72,18 @@ class _HomeScreenState extends State<HomeScreen> {
   /// Redraws the screen every second, for the countdown.
   late final Timer _ticker;
 
-  /// Starts loading. The screen shows any error; it is also logged, so an
-  /// unexpected one is never invisible (and never counts as "unhandled" in
-  /// the moment before the screen listens).
+  /// Keeps the phone's prayer alerts in step with what this screen shows.
+  late final AlertScheduler _scheduler;
+
+  /// Starts loading. Times that load go on to the alerts. The screen shows
+  /// any error; it is also logged, so an unexpected one is never invisible
+  /// (and never counts as "unhandled" in the moment before the screen
+  /// listens).
   Future<ResolvedTimes> _load() {
     final times = widget.loadTimes(widget.place.value, widget.now());
     unawaited(
       times.then<void>(
-        (_) {},
+        _afterLoad,
         onError: (Object error, StackTrace stack) =>
             log('Loading prayer times failed', error: error, stackTrace: stack),
       ),
@@ -77,9 +91,36 @@ class _HomeScreenState extends State<HomeScreen> {
     return times;
   }
 
+  /// Asks for alert permission the first time, then plans the alerts.
+  Future<void> _afterLoad(ResolvedTimes times) async {
+    if (!mounted) return;
+    if (widget.alerts.value == PrayerAlerts.askFirst) {
+      await turnOnAlerts(
+        context,
+        notifications: widget.notifications,
+        alerts: widget.alerts,
+      );
+    }
+    if (mounted) _scheduler.timesLoaded(times);
+  }
+
+  /// Back at the front: plans the alerts again, so they never run out while
+  /// the app sits in the background, and pick up any change to exact timing.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _scheduler.replan();
+  }
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _scheduler = AlertScheduler(
+      asr: widget.asrMethod,
+      alerts: widget.alerts,
+      replaceAll: widget.notifications.replaceAll,
+      now: widget.now,
+    );
     _times = _load();
     _ticker = Timer.periodic(
       const Duration(seconds: 1),
@@ -102,9 +143,18 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /// Runs when the language changes too: the alerts follow the screen's.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _scheduler.textChanged(AppLocalizations.of(context));
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _ticker.cancel();
+    _scheduler.dispose();
     super.dispose();
   }
 
@@ -130,6 +180,8 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (_) => SettingsScreen(
         language: widget.language,
         asrMethod: widget.asrMethod,
+        alerts: widget.alerts,
+        notifications: widget.notifications,
       ),
     ),
   );

@@ -152,4 +152,28 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get retry => 'حاول مرة أخرى';
+
+  @override
+  String get prayerAlerts => 'تنبيهات الصلاة';
+
+  @override
+  String get prayerAlertsHint => 'إشعار عند دخول وقت كل صلاة من الصلوات الخمس';
+
+  @override
+  String get exactAlarmExplain =>
+      'لتنبيهك عند دخول وقت كل صلاة تماماً، يطلب أندرويد أن تسمح لهذا التطبيق بـ«المنبّهات والتذكيرات». بدون ذلك قد تتأخر التنبيهات.';
+
+  @override
+  String get continueLabel => 'متابعة';
+
+  @override
+  String get notNow => 'ليس الآن';
+
+  @override
+  String get alertsMayBeLate =>
+      'قد تتأخر تنبيهات الصلاة. يمكنك السماح بالتوقيت الدقيق من إعدادات الهاتف.';
+
+  @override
+  String get notificationsBlocked =>
+      'الإشعارات غير مسموح بها لهذا التطبيق، لذلك تنبيهات الصلاة متوقفة. يمكنك السماح بها من إعدادات الهاتف.';
 }

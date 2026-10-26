@@ -1,20 +1,29 @@
 import 'package:flutter/material.dart';
 
+import 'package:prayer_times/data/phone_notifications.dart';
+import 'package:prayer_times/data/prayer_alerts.dart';
 import 'package:prayer_times/data/timetable.dart';
 import 'package:prayer_times/l10n/app_language.dart';
 import 'package:prayer_times/l10n/app_localizations.dart';
+import 'package:prayer_times/screens/alert_permission.dart';
 
-/// The app's settings: language and Asr time.
+/// The app's settings: prayer alerts, language and Asr time.
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({
     super.key,
     required this.language,
     required this.asrMethod,
+    required this.alerts,
+    required this.notifications,
   });
 
-  /// Setting either of these saves it and updates the whole app at once.
+  /// Setting any of these saves it and updates the whole app at once.
   final ValueNotifier<AppLanguage> language;
   final ValueNotifier<AsrMethod> asrMethod;
+  final ValueNotifier<PrayerAlerts> alerts;
+
+  /// The phone, asked for permission when alerts are switched on.
+  final PhoneNotifications notifications;
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +32,23 @@ class SettingsScreen extends StatelessWidget {
       appBar: AppBar(title: Text(text.settings)),
       body: ListView(
         children: [
+          ValueListenableBuilder(
+            valueListenable: alerts,
+            builder: (context, choice, _) => SwitchListTile(
+              title: Text(text.prayerAlerts),
+              subtitle: Text(text.prayerAlertsHint),
+              // Not yet asked counts as on.
+              value: choice != PrayerAlerts.off,
+              onChanged: (on) => on
+                  ? turnOnAlerts(
+                      context,
+                      notifications: notifications,
+                      alerts: alerts,
+                    )
+                  : alerts.value = PrayerAlerts.off,
+            ),
+          ),
+          const Divider(),
           _ChoiceSection(
             heading: text.language,
             setting: language,

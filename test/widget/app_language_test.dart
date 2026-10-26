@@ -3,12 +3,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
 import 'package:prayer_times/data/place.dart';
+import 'package:prayer_times/data/prayer_alerts.dart';
 import 'package:prayer_times/data/timetable.dart';
 import 'package:prayer_times/l10n/app_language.dart';
 import 'package:prayer_times/main.dart';
 
 import '../unit/data/sample_places.dart';
 import '../unit/data/sample_timetable.dart';
+import 'fake_notifications.dart';
 
 /// Starts the whole app with the phone set to [phoneLanguage] and the app's
 /// own Language setting at [chosen].
@@ -28,6 +30,8 @@ Future<void> pumpApp(
       places: samplePlaces,
       asrMethod: ValueNotifier(AsrMethod.standard),
       language: ValueNotifier(chosen),
+      alerts: ValueNotifier(PrayerAlerts.on),
+      notifications: FakeNotifications(),
     ),
   );
   // Two frames, not pumpAndSettle: the countdown ticks every second, so the
@@ -56,6 +60,14 @@ void main() {
     await pumpApp(tester, phoneLanguage: 'ar');
 
     expectTitle('مواقيت الصلاة', TextDirection.rtl, tester);
+  });
+
+  testWidgets('falls back to English on a phone in another language', (
+    tester,
+  ) async {
+    await pumpApp(tester, phoneLanguage: 'fr');
+
+    expectTitle('Prayer Times', TextDirection.ltr, tester);
   });
 
   testWidgets('uses Arabic when chosen, even on an English phone', (
