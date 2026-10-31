@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
+import 'package:prayer_times/data/calculation_settings.dart';
 import 'package:prayer_times/data/display_settings.dart';
 import 'package:prayer_times/data/place.dart';
 import 'package:prayer_times/data/prayer_alerts.dart';
@@ -31,6 +32,7 @@ Future<void> pumpApp(
       place: ValueNotifier(london),
       places: samplePlaces,
       display: display ?? DisplaySettings(),
+      calculation: CalculationSettings(),
       asrMethod: ValueNotifier(AsrMethod.standard),
       language: ValueNotifier(chosen),
       alerts: ValueNotifier(PrayerAlerts.on),

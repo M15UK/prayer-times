@@ -9,15 +9,106 @@ import 'package:timezone/timezone.dart' as tz;
 
 import 'package:prayer_times/data/timetable.dart';
 
-/// The calculation methods the app uses.
+/// The calculation methods the user can choose: every method the adhan
+/// library publishes, plus the user's own angles. Never rename one: the name
+/// is saved, and is part of a calculated timetable's sourceId.
 enum CalculatedMethod {
-  /// Saudi Arabia's official standard. Matches ummulqura.org.sa within a
-  /// minute on every day of 2026 (see docs/sources.md).
+  algerian,
+  dubai,
+  egyptian,
+  france,
+  gulfRegion,
+  indonesian,
+  jafari,
+  jordan,
+  karachi,
+  kuwait,
+  moonsightingCommittee,
+  morocco,
+
+  /// What "Automatic" uses outside Saudi Arabia.
+  muslimWorldLeague,
+  northAmerica,
+  portugal,
+  qatar,
+  russia,
+  singapore,
+  tehran,
+  tunisia,
+  turkiye,
+
+  /// Saudi Arabia's official standard, and what "Automatic" uses there.
+  /// Matches ummulqura.org.sa within a minute on every day of 2026 (see
+  /// docs/sources.md).
   ummAlQura,
 
-  /// Everywhere else. Above 48° latitude (e.g. UK summers) Fajr and Isha
-  /// use the "seventh of the night" rule, as decided in Step 1.
-  muslimWorldLeague,
+  /// The user's own [MethodAngles].
+  custom,
+}
+
+/// The sun's angles below the horizon that set Fajr, Maghrib and Isha.
+typedef MethodAngles = ({
+  double fajrAngle,
+  double ishaAngle,
+
+  /// Isha this many minutes after sunset instead of by [ishaAngle] (null:
+  /// by angle).
+  int? ishaMinutes,
+
+  /// Maghrib when the sun is this far below the horizon (null: at sunset).
+  double? maghribAngle,
+});
+
+/// Changed copies of a set of angles (records can't be changed in place).
+extension MethodAnglesCopies on MethodAngles {
+  MethodAngles withFajrAngle(double angle) => (
+    fajrAngle: angle,
+    ishaAngle: ishaAngle,
+    ishaMinutes: ishaMinutes,
+    maghribAngle: maghribAngle,
+  );
+
+  MethodAngles withIshaAngle(double angle) => (
+    fajrAngle: fajrAngle,
+    ishaAngle: angle,
+    ishaMinutes: ishaMinutes,
+    maghribAngle: maghribAngle,
+  );
+
+  /// Null: Isha by angle again.
+  MethodAngles withIshaMinutes(int? minutes) => (
+    fajrAngle: fajrAngle,
+    ishaAngle: ishaAngle,
+    ishaMinutes: minutes,
+    maghribAngle: maghribAngle,
+  );
+
+  /// Null: Maghrib at sunset again.
+  MethodAngles withMaghribAngle(double? angle) => (
+    fajrAngle: fajrAngle,
+    ishaAngle: ishaAngle,
+    ishaMinutes: ishaMinutes,
+    maghribAngle: angle,
+  );
+}
+
+/// Where the Custom method starts: the Muslim World League's angles.
+const MethodAngles defaultCustomAngles = (
+  fajrAngle: 18,
+  ishaAngle: 17,
+  ishaMinutes: null,
+  maghribAngle: null,
+);
+
+/// How Fajr and Isha are found where the sky never gets dark enough for
+/// their angles (e.g. UK summers).
+enum HighLatitude {
+  /// The seventh of the night beyond 48° north or south, the middle of the
+  /// night nearer the equator (as decided in Step 1).
+  automatic,
+  middleOfTheNight,
+  seventhOfTheNight,
+  twilightAngle,
 }
 
 /// Thrown when a method gives no sensible times for a place: inside the
@@ -59,6 +150,8 @@ CalculatedMethod? calculatedMethodOf(Timetable timetable) =>
 /// prayers up to the next minute (never too early), sunrise down (Fajr
 /// never seems to last longer than it does).
 ///
+/// [custom] is used only by [CalculatedMethod.custom].
+///
 /// Throws [CalculationUnavailable] where the method breaks down, rather than
 /// return times that cannot be right.
 Timetable calculateTimetable({
@@ -67,13 +160,18 @@ Timetable calculateTimetable({
   required String timeZone,
   required int year,
   required CalculatedMethod method,
+  MethodAngles custom = defaultCustomAngles,
+  HighLatitude highLatitude = HighLatitude.automatic,
 }) {
   if (latitude.abs() > _polarCircle) {
     throw CalculationUnavailable('$latitude° is inside a polar circle');
   }
   final coordinates = adhan.Coordinates(latitude, longitude);
   final zone = tz.getLocation(timeZone);
-  final standard = _parameters(method, coordinates);
+  final standard = _parameters(
+    method,
+    custom,
+  ).copyWith(highLatitudeRule: _highLatitudeRule(highLatitude, coordinates));
   final hanafi = standard.copyWith(madhab: adhan.Madhab.hanafi);
   return Timetable(
     sourceId: '$_calculatedPrefix${method.name}',
@@ -134,19 +232,86 @@ DayTimes _calculateDay(
   return DayTimes(start: start, asrHanafi: up(timesWith(hanafi).asr));
 }
 
+/// [method]'s angles, as the method list shows them.
+MethodAngles anglesOf(
+  CalculatedMethod method, {
+  MethodAngles custom = defaultCustomAngles,
+}) {
+  final parameters = _parameters(method, custom);
+  final ishaMinutes = parameters.ishaInterval ?? 0;
+  return (
+    fajrAngle: parameters.fajrAngle,
+    ishaAngle: parameters.ishaAngle,
+    // The library writes "no interval" as 0.
+    ishaMinutes: ishaMinutes > 0 ? ishaMinutes : null,
+    maghribAngle: parameters.maghribAngle,
+  );
+}
+
+/// The minutes [method] itself adds to some times (e.g. Dhuhr +1 for the
+/// Muslim World League), as the method list shows them.
+Map<Prayer, int> methodCorrections(CalculatedMethod method) {
+  final byName = Prayer.values.asNameMap();
+  return Map.unmodifiable({
+    for (final MapEntry(key: prayer, value: minutes) in _parameters(
+      method,
+      defaultCustomAngles,
+    ).methodAdjustments.entries)
+      if (minutes != 0) ?byName[prayer.name]: minutes,
+  });
+}
+
+/// The library's own settings for [method], including its minute
+/// corrections (e.g. Dhuhr +1 minute for the Muslim World League).
 adhan.CalculationParameters _parameters(
   CalculatedMethod method,
-  adhan.Coordinates coordinates,
+  MethodAngles custom,
 ) => switch (method) {
-  CalculatedMethod.ummAlQura => adhan.CalculationMethodParameters.ummAlQura(),
+  CalculatedMethod.algerian => adhan.CalculationMethodParameters.algerian(),
+  CalculatedMethod.dubai => adhan.CalculationMethodParameters.dubai(),
+  CalculatedMethod.egyptian => adhan.CalculationMethodParameters.egyptian(),
+  CalculatedMethod.france => adhan.CalculationMethodParameters.france(),
+  CalculatedMethod.gulfRegion => adhan.CalculationMethodParameters.gulfRegion(),
+  CalculatedMethod.indonesian => adhan.CalculationMethodParameters.indonesian(),
+  CalculatedMethod.jafari => adhan.CalculationMethodParameters.jafari(),
+  CalculatedMethod.jordan => adhan.CalculationMethodParameters.jordan(),
+  CalculatedMethod.karachi => adhan.CalculationMethodParameters.karachi(),
+  CalculatedMethod.kuwait => adhan.CalculationMethodParameters.kuwait(),
+  CalculatedMethod.moonsightingCommittee =>
+    adhan.CalculationMethodParameters.moonsightingCommittee(),
+  CalculatedMethod.morocco => adhan.CalculationMethodParameters.morocco(),
   CalculatedMethod.muslimWorldLeague =>
-    adhan.CalculationMethodParameters.muslimWorldLeague().copyWith(
-      // "Seventh of the night" beyond 48° north or south, "middle of the
-      // night" nearer the equator. The library only checks north, hence abs.
-      highLatitudeRule: adhan.HighLatitudeRule.recommended(
-        adhan.Coordinates(coordinates.latitude.abs(), coordinates.longitude),
-      ),
-    ),
+    adhan.CalculationMethodParameters.muslimWorldLeague(),
+  CalculatedMethod.northAmerica =>
+    adhan.CalculationMethodParameters.northAmerica(),
+  CalculatedMethod.portugal => adhan.CalculationMethodParameters.portugal(),
+  CalculatedMethod.qatar => adhan.CalculationMethodParameters.qatar(),
+  CalculatedMethod.russia => adhan.CalculationMethodParameters.russia(),
+  CalculatedMethod.singapore => adhan.CalculationMethodParameters.singapore(),
+  CalculatedMethod.tehran => adhan.CalculationMethodParameters.tehran(),
+  CalculatedMethod.tunisia => adhan.CalculationMethodParameters.tunisia(),
+  CalculatedMethod.turkiye => adhan.CalculationMethodParameters.turkiye(),
+  CalculatedMethod.ummAlQura => adhan.CalculationMethodParameters.ummAlQura(),
+  CalculatedMethod.custom => adhan.CalculationParameters(
+    method: adhan.CalculationMethod.other,
+    fajrAngle: custom.fajrAngle,
+    ishaAngle: custom.ishaAngle,
+    ishaInterval: custom.ishaMinutes,
+    maghribAngle: custom.maghribAngle,
+  ),
+};
+
+adhan.HighLatitudeRule _highLatitudeRule(
+  HighLatitude choice,
+  adhan.Coordinates coordinates,
+) => switch (choice) {
+  // The library only checks north, hence abs.
+  HighLatitude.automatic => adhan.HighLatitudeRule.recommended(
+    adhan.Coordinates(coordinates.latitude.abs(), coordinates.longitude),
+  ),
+  HighLatitude.middleOfTheNight => adhan.HighLatitudeRule.middleOfTheNight,
+  HighLatitude.seventhOfTheNight => adhan.HighLatitudeRule.seventhOfTheNight,
+  HighLatitude.twilightAngle => adhan.HighLatitudeRule.twilightAngle,
 };
 
 String _isoDate(DateTime date) => date.toIso8601String().substring(0, 10);

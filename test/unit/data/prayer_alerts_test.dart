@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
+import 'package:prayer_times/data/adjusted_timetable.dart';
 import 'package:prayer_times/data/calculated_timetable.dart';
 import 'package:prayer_times/data/place.dart';
 import 'package:prayer_times/data/prayer_alerts.dart';
@@ -89,6 +90,49 @@ void main() {
       expect(
         alerts.first.body,
         endsWith(' · Your location · Calculated on this phone'),
+      );
+    });
+
+    test('says when the times are adjusted', () {
+      final adjusted = adjustTimetable(sampleTimetable(), const {
+        Prayer.asr: 2,
+      });
+
+      final alerts = planAlerts(
+        times: (timetable: adjusted, place: london),
+        now: lunchtime,
+        asr: AsrMethod.standard,
+        text: english,
+        is24Hour: true,
+      );
+
+      expect(alerts.first.body, startsWith('14:19 · ')); // published 14:17
+      expect(alerts.first.body, endsWith(' · Adjusted'));
+    });
+
+    test('says when calculated times are adjusted too', () {
+      final calculated = calculateTimetable(
+        latitude: 53.4808,
+        longitude: -2.2426,
+        timeZone: 'Europe/London',
+        year: 2026,
+        method: CalculatedMethod.muslimWorldLeague,
+      );
+
+      final alerts = planAlerts(
+        times: (
+          timetable: adjustTimetable(calculated, const {Prayer.asr: 2}),
+          place: null,
+        ),
+        now: lunchtime,
+        asr: AsrMethod.standard,
+        text: english,
+        is24Hour: true,
+      );
+
+      expect(
+        alerts.first.body,
+        endsWith(' · Calculated on this phone · Adjusted'),
       );
     });
 

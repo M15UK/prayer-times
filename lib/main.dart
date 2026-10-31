@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
+import 'package:prayer_times/data/calculation_settings.dart';
 import 'package:prayer_times/data/device_location.dart';
 import 'package:prayer_times/data/display_settings.dart';
 import 'package:prayer_times/data/phone_notifications.dart';
@@ -42,6 +43,7 @@ Future<void> main() async {
   );
   final storage = await SharedPreferences.getInstance();
   final place = SavedPlace(storage, places: places);
+  final calculation = CalculationSettings.saved(storage);
   final notifications = PhoneNotifications();
   try {
     await notifications.start();
@@ -58,6 +60,7 @@ Future<void> main() async {
         repository: repository,
         locate: approximatePosition,
         timeZoneName: phoneTimeZoneName,
+        calculation: calculation.current, // as chosen at this moment
       ),
       place: place,
       places: places,
@@ -83,6 +86,7 @@ Future<void> main() async {
       notifications: notifications,
       publishWidgets: publishToAndroidWidgets,
       display: DisplaySettings.saved(storage),
+      calculation: calculation,
     ),
   );
 }
@@ -98,6 +102,7 @@ class PrayerTimesApp extends StatelessWidget {
     required this.alerts,
     required this.notifications,
     required this.display,
+    required this.calculation,
     this.publishWidgets = noWidgets,
     this.isFirstLaunch = false,
   });
@@ -125,6 +130,9 @@ class PrayerTimesApp extends StatelessWidget {
 
   /// Theme, colour, time format and times shown (the Display page).
   final DisplaySettings display;
+
+  /// How the times are worked out (the Prayer calculation page).
+  final CalculationSettings calculation;
 
   @override
   Widget build(BuildContext context) {
@@ -177,5 +185,6 @@ class PrayerTimesApp extends StatelessWidget {
     notifications: notifications,
     publishWidgets: publishWidgets,
     display: display,
+    calculation: calculation,
   );
 }

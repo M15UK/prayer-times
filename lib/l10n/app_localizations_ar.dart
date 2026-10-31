@@ -49,7 +49,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get useMyLocation => 'استخدم موقعي';
 
   @override
-  String get useMyLocationHint => 'أقرب جدول رسمي، أو مواقيت محسوبة لمكانك';
+  String get useMyLocationHint =>
+      'مواقيت رسمية أو محسوبة لمكانك، حسب إعدادات حساب أوقات الصلاة';
 
   @override
   String get searchPlaces => 'ابحث عن مدينة أو مسجد';
@@ -66,7 +67,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get calculationUnavailable =>
-      'لا يمكن حساب مواقيت الصلاة لمكانك (مثل المناطق القريبة جدًا من القطبين). يُرجى اختيار مكان.';
+      'لا يمكن حساب مواقيت الصلاة لمكانك بهذه الإعدادات (مثل المناطق القريبة جدًا من القطبين، أو إذا وقع العشاء بعد منتصف الليل). يُرجى اختيار مكان، أو تغيير حساب أوقات الصلاة في الإعدادات.';
 
   @override
   String get loadingTimes => 'جارٍ تحميل مواقيت الصلاة';
@@ -109,11 +110,60 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get calculatedUmmAlQura => 'محسوبة على هذا الجهاز (طريقة أم القرى)';
+  String calculatedWith(String method) {
+    return 'محسوبة على هذا الجهاز (طريقة $method)';
+  }
 
   @override
-  String get calculatedMuslimWorldLeague =>
-      'محسوبة على هذا الجهاز (طريقة رابطة العالم الإسلامي)';
+  String methodName(String method) {
+    String _temp0 = intl.Intl.selectLogic(method, {
+      'algerian': 'الجزائر',
+      'dubai': 'دبي',
+      'egyptian': 'الهيئة المصرية العامة للمساحة',
+      'france': 'اتحاد المنظمات الإسلامية في فرنسا',
+      'gulfRegion': 'منطقة الخليج',
+      'indonesian': 'إندونيسيا',
+      'jafari': 'الجعفرية',
+      'jordan': 'الأردن',
+      'karachi': 'جامعة العلوم الإسلامية بكراتشي',
+      'kuwait': 'الكويت',
+      'moonsightingCommittee': 'لجنة رؤية الهلال',
+      'morocco': 'المغرب',
+      'muslimWorldLeague': 'رابطة العالم الإسلامي',
+      'northAmerica': 'الجمعية الإسلامية لأمريكا الشمالية',
+      'portugal': 'البرتغال',
+      'qatar': 'قطر',
+      'russia': 'روسيا',
+      'singapore': 'سنغافورة',
+      'tehran': 'طهران',
+      'tunisia': 'تونس',
+      'turkiye': 'الشؤون الدينية التركية',
+      'ummAlQura': 'أم القرى',
+      'custom': 'مخصّصة',
+      'other': '',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String adjustedFrom(String changes, String source) {
+    return 'معدّلة: $changes عن $source';
+  }
+
+  @override
+  String minuteChange(String prayer, String change) {
+    return '$prayer $change د';
+  }
+
+  @override
+  String get listSeparator => '، ';
+
+  @override
+  String get adjustedMark => 'معدّلة';
+
+  @override
+  String get timesOutOfOrder =>
+      'تعديل الدقائق جعل أوقات الصلاة غير مرتّبة. يُرجى تغييره.';
 
   @override
   String get calculated => 'محسوبة على هذا الجهاز';
@@ -274,4 +324,107 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get timesShownHint =>
       'يستمر العد التنازلي للمواقيت المخفية، وتصل تنبيهاتها كالمعتاد.';
+
+  @override
+  String get prayerCalculation => 'حساب أوقات الصلاة';
+
+  @override
+  String get prayerCalculationHint =>
+      'الطريقة والعصر وخطوط العرض العليا وتعديل الدقائق';
+
+  @override
+  String get officialFirst => 'الجداول الرسمية أولًا';
+
+  @override
+  String get officialFirstOn =>
+      'الأوقات الرسمية حيث تتوفر (لندن والسعودية)، وطريقتك في غيرها';
+
+  @override
+  String get officialFirstOff =>
+      'طريقتك في كل مكان، مع الإشارة دائمًا إلى أنها محسوبة';
+
+  @override
+  String get method => 'الطريقة';
+
+  @override
+  String get methodAutomatic => 'تلقائي';
+
+  @override
+  String get methodAutomaticHint =>
+      'أم القرى في السعودية، ورابطة العالم الإسلامي في غيرها';
+
+  @override
+  String angleOf(String prayer, String angle) {
+    return '$prayer $angle';
+  }
+
+  @override
+  String minutesAfterSunset(String prayer, int minutes) {
+    return '$prayer بعد الغروب بـ$minutes د';
+  }
+
+  @override
+  String get limitedBySeason => 'مع حدود موسمية';
+
+  @override
+  String get customAngles => 'زوايا مخصّصة';
+
+  @override
+  String get customAnglesHint => 'انخفاض الشمس تحت الأفق عند كل وقت';
+
+  @override
+  String get byAngle => 'زاوية';
+
+  @override
+  String get byMinutesAfterSunset => 'دقائق بعد الغروب';
+
+  @override
+  String get atSunset => 'عند الغروب';
+
+  @override
+  String get highLatitude => 'قاعدة خطوط العرض العليا';
+
+  @override
+  String get highLatitudeHint =>
+      'للأماكن البعيدة عن خط الاستواء حيث لا تُظلم السماء بما يكفي، مثل صيف بريطانيا';
+
+  @override
+  String get highLatitudeAutomaticHint =>
+      'سُبع الليل بعد خط العرض 48°، ومنتصف الليل أقرب إلى خط الاستواء';
+
+  @override
+  String get middleOfTheNight => 'منتصف الليل';
+
+  @override
+  String get middleOfTheNightHint =>
+      'لا يصلح لصيف بريطانيا: يقع العشاء بعد منتصف الليل';
+
+  @override
+  String get seventhOfTheNight => 'سُبع الليل';
+
+  @override
+  String get twilightAngle => 'زاوية الشفق';
+
+  @override
+  String get minuteChanges => 'تعديل الدقائق';
+
+  @override
+  String minuteChangesHint(int max) {
+    return 'قدّم وقتًا أو أخّره حتى $max دقيقة. يُشار إلى الأوقات المعدّلة بأنها معدّلة.';
+  }
+
+  @override
+  String minutesValue(String minutes) {
+    return '$minutes د';
+  }
+
+  @override
+  String decrease(String name) {
+    return 'إنقاص $name';
+  }
+
+  @override
+  String increase(String name) {
+    return 'زيادة $name';
+  }
 }

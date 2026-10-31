@@ -22,12 +22,12 @@
   "location": "Location",
   "yourLocation": "Your location",
   "useMyLocation": "Use my location",
-  "useMyLocationHint": "The nearest official timetable, or times calculated for where you are",
+  "useMyLocationHint": "Official or calculated times for where you are, as set in Prayer calculation",
   "searchPlaces": "Search for a city or mosque",
   "noPlacesFound": "No places match",
   "choosePlace": "Choose a place",
   "locationUnavailable": "Couldn't find your location. Allow location access, or choose a place.",
-  "calculationUnavailable": "Prayer times can't be calculated for where you are (for example, very near the poles). Please choose a place.",
+  "calculationUnavailable": "Prayer times can't be calculated for where you are with these settings (for example, very near the poles, or with Isha after midnight). Please choose a place, or change Prayer calculation in Settings.",
   "loadingTimes": "Loading prayer times",
   "hanafiNotPublished": "This timetable only publishes the standard Asr time.",
   "sourceUmmAlQura": "Umm al-Qura Calendar",
@@ -54,11 +54,34 @@
     "description": "Where the times on screen came from.",
     "placeholders": {"name": {"type": "String"}}
   },
-  "calculatedUmmAlQura": "Calculated on this phone (Umm al-Qura method)",
-  "@calculatedUmmAlQura": {
-    "description": "Source label for times calculated with Saudi Arabia's official method. Must always say they are calculated."
+  "calculatedWith": "Calculated on this phone ({method} method)",
+  "@calculatedWith": {
+    "description": "Source label for calculated times, with the method's name. Must always say they are calculated.",
+    "placeholders": {"method": {"type": "String", "example": "Muslim World League"}}
   },
-  "calculatedMuslimWorldLeague": "Calculated on this phone (Muslim World League method)",
+  "methodName": "{method, select, algerian{Algerian} dubai{Dubai} egyptian{Egyptian} france{French UOIF} gulfRegion{Gulf} indonesian{Indonesian} jafari{Jafari} jordan{Jordanian} karachi{Karachi} kuwait{Kuwaiti} moonsightingCommittee{Moonsighting Committee} morocco{Moroccan} muslimWorldLeague{Muslim World League} northAmerica{ISNA} portugal{Portuguese} qatar{Qatari} russia{Russian} singapore{Singapore} tehran{Tehran} tunisia{Tunisian} turkiye{Turkish Diyanet} ummAlQura{Umm al-Qura} custom{Custom} other{}}",
+  "@methodName": {
+    "description": "A calculation method's name, as listed and inside calculatedWith; method is its id.",
+    "placeholders": {"method": {"type": "String"}}
+  },
+  "adjustedFrom": "Adjusted: {changes} from {source}",
+  "@adjustedFrom": {
+    "description": "Source label for times the user moved by some minutes. Must always say they are adjusted.",
+    "placeholders": {
+      "changes": {"type": "String", "example": "Fajr +2 min, Isha −3 min"},
+      "source": {"type": "String", "example": "London Unified Prayer Timetable"}
+    }
+  },
+  "minuteChange": "{prayer} {change} min",
+  "@minuteChange": {
+    "placeholders": {
+      "prayer": {"type": "String", "example": "Fajr"},
+      "change": {"type": "String", "example": "+2"}
+    }
+  },
+  "listSeparator": ", ",
+  "adjustedMark": "Adjusted",
+  "timesOutOfOrder": "Your minute changes put the prayer times out of order. Please change them.",
   "calculated": "Calculated on this phone",
   "hijriDate": "{day} {month} {year} AH",
   "@hijriDate": {
@@ -112,5 +135,59 @@
   "timeFormat12": "12-hour (5:53 PM)",
   "timeFormat24": "24-hour (17:53)",
   "timesShown": "Times shown",
-  "timesShownHint": "Hidden times are still counted down to, and their alerts still come."
+  "timesShownHint": "Hidden times are still counted down to, and their alerts still come.",
+  "prayerCalculation": "Prayer calculation",
+  "prayerCalculationHint": "Method, Asr, high latitudes and minute changes",
+  "officialFirst": "Official timetables first",
+  "officialFirstOn": "Official times where there's one (London, Saudi Arabia); your method everywhere else",
+  "officialFirstOff": "Your method everywhere, always labelled Calculated",
+  "method": "Method",
+  "methodAutomatic": "Automatic",
+  "methodAutomaticHint": "Umm al-Qura in Saudi Arabia, Muslim World League elsewhere",
+  "angleOf": "{prayer} {angle}",
+  "@angleOf": {
+    "placeholders": {
+      "prayer": {"type": "String", "example": "Fajr"},
+      "angle": {"type": "String", "example": "18.5°"}
+    }
+  },
+  "minutesAfterSunset": "{prayer} {minutes} min after sunset",
+  "@minutesAfterSunset": {
+    "placeholders": {
+      "prayer": {"type": "String", "example": "Isha"},
+      "minutes": {"type": "int"}
+    }
+  },
+  "limitedBySeason": "limited by season",
+  "customAngles": "Custom angles",
+  "customAnglesHint": "How far the sun is below the horizon at each time",
+  "byAngle": "Angle",
+  "byMinutesAfterSunset": "Minutes after sunset",
+  "atSunset": "At sunset",
+  "highLatitude": "High-latitude rule",
+  "highLatitudeHint": "For places far from the equator, where the sky doesn't get dark enough, such as UK summers",
+  "highLatitudeAutomaticHint": "Seventh of the night beyond 48°, middle of the night nearer the equator",
+  "middleOfTheNight": "Middle of the night",
+  "middleOfTheNightHint": "Not for UK summers: Isha would fall after midnight",
+  "seventhOfTheNight": "Seventh of the night",
+  "twilightAngle": "Twilight angle",
+  "minuteChanges": "Minute changes",
+  "minuteChangesHint": "Move a time earlier or later, by up to {max} minutes. Changed times are labelled Adjusted.",
+  "@minuteChangesHint": {
+    "placeholders": {"max": {"type": "int"}}
+  },
+  "minutesValue": "{minutes} min",
+  "@minutesValue": {
+    "placeholders": {"minutes": {"type": "String", "example": "+2"}}
+  },
+  "decrease": "Decrease {name}",
+  "@decrease": {
+    "description": "Screen-reader label for a minus button.",
+    "placeholders": {"name": {"type": "String", "example": "Fajr"}}
+  },
+  "increase": "Increase {name}",
+  "@increase": {
+    "description": "Screen-reader label for a plus button.",
+    "placeholders": {"name": {"type": "String", "example": "Fajr"}}
+  }
 }

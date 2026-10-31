@@ -179,7 +179,7 @@ abstract class AppLocalizations {
   /// No description provided for @useMyLocationHint.
   ///
   /// In en, this message translates to:
-  /// **'The nearest official timetable, or times calculated for where you are'**
+  /// **'Official or calculated times for where you are, as set in Prayer calculation'**
   String get useMyLocationHint;
 
   /// No description provided for @searchPlaces.
@@ -209,7 +209,7 @@ abstract class AppLocalizations {
   /// No description provided for @calculationUnavailable.
   ///
   /// In en, this message translates to:
-  /// **'Prayer times can\'t be calculated for where you are (for example, very near the poles). Please choose a place.'**
+  /// **'Prayer times can\'t be calculated for where you are with these settings (for example, very near the poles, or with Isha after midnight). Please choose a place, or change Prayer calculation in Settings.'**
   String get calculationUnavailable;
 
   /// No description provided for @loadingTimes.
@@ -284,17 +284,47 @@ abstract class AppLocalizations {
   /// **'Source: {name}'**
   String source(String name);
 
-  /// Source label for times calculated with Saudi Arabia's official method. Must always say they are calculated.
+  /// Source label for calculated times, with the method's name. Must always say they are calculated.
   ///
   /// In en, this message translates to:
-  /// **'Calculated on this phone (Umm al-Qura method)'**
-  String get calculatedUmmAlQura;
+  /// **'Calculated on this phone ({method} method)'**
+  String calculatedWith(String method);
 
-  /// No description provided for @calculatedMuslimWorldLeague.
+  /// A calculation method's name, as listed and inside calculatedWith; method is its id.
   ///
   /// In en, this message translates to:
-  /// **'Calculated on this phone (Muslim World League method)'**
-  String get calculatedMuslimWorldLeague;
+  /// **'{method, select, algerian{Algerian} dubai{Dubai} egyptian{Egyptian} france{French UOIF} gulfRegion{Gulf} indonesian{Indonesian} jafari{Jafari} jordan{Jordanian} karachi{Karachi} kuwait{Kuwaiti} moonsightingCommittee{Moonsighting Committee} morocco{Moroccan} muslimWorldLeague{Muslim World League} northAmerica{ISNA} portugal{Portuguese} qatar{Qatari} russia{Russian} singapore{Singapore} tehran{Tehran} tunisia{Tunisian} turkiye{Turkish Diyanet} ummAlQura{Umm al-Qura} custom{Custom} other{}}'**
+  String methodName(String method);
+
+  /// Source label for times the user moved by some minutes. Must always say they are adjusted.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjusted: {changes} from {source}'**
+  String adjustedFrom(String changes, String source);
+
+  /// No description provided for @minuteChange.
+  ///
+  /// In en, this message translates to:
+  /// **'{prayer} {change} min'**
+  String minuteChange(String prayer, String change);
+
+  /// No description provided for @listSeparator.
+  ///
+  /// In en, this message translates to:
+  /// **', '**
+  String get listSeparator;
+
+  /// No description provided for @adjustedMark.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjusted'**
+  String get adjustedMark;
+
+  /// No description provided for @timesOutOfOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Your minute changes put the prayer times out of order. Please change them.'**
+  String get timesOutOfOrder;
 
   /// No description provided for @calculated.
   ///
@@ -529,6 +559,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hidden times are still counted down to, and their alerts still come.'**
   String get timesShownHint;
+
+  /// No description provided for @prayerCalculation.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayer calculation'**
+  String get prayerCalculation;
+
+  /// No description provided for @prayerCalculationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Method, Asr, high latitudes and minute changes'**
+  String get prayerCalculationHint;
+
+  /// No description provided for @officialFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Official timetables first'**
+  String get officialFirst;
+
+  /// No description provided for @officialFirstOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Official times where there\'s one (London, Saudi Arabia); your method everywhere else'**
+  String get officialFirstOn;
+
+  /// No description provided for @officialFirstOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Your method everywhere, always labelled Calculated'**
+  String get officialFirstOff;
+
+  /// No description provided for @method.
+  ///
+  /// In en, this message translates to:
+  /// **'Method'**
+  String get method;
+
+  /// No description provided for @methodAutomatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get methodAutomatic;
+
+  /// No description provided for @methodAutomaticHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Umm al-Qura in Saudi Arabia, Muslim World League elsewhere'**
+  String get methodAutomaticHint;
+
+  /// No description provided for @angleOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{prayer} {angle}'**
+  String angleOf(String prayer, String angle);
+
+  /// No description provided for @minutesAfterSunset.
+  ///
+  /// In en, this message translates to:
+  /// **'{prayer} {minutes} min after sunset'**
+  String minutesAfterSunset(String prayer, int minutes);
+
+  /// No description provided for @limitedBySeason.
+  ///
+  /// In en, this message translates to:
+  /// **'limited by season'**
+  String get limitedBySeason;
+
+  /// No description provided for @customAngles.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom angles'**
+  String get customAngles;
+
+  /// No description provided for @customAnglesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'How far the sun is below the horizon at each time'**
+  String get customAnglesHint;
+
+  /// No description provided for @byAngle.
+  ///
+  /// In en, this message translates to:
+  /// **'Angle'**
+  String get byAngle;
+
+  /// No description provided for @byMinutesAfterSunset.
+  ///
+  /// In en, this message translates to:
+  /// **'Minutes after sunset'**
+  String get byMinutesAfterSunset;
+
+  /// No description provided for @atSunset.
+  ///
+  /// In en, this message translates to:
+  /// **'At sunset'**
+  String get atSunset;
+
+  /// No description provided for @highLatitude.
+  ///
+  /// In en, this message translates to:
+  /// **'High-latitude rule'**
+  String get highLatitude;
+
+  /// No description provided for @highLatitudeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For places far from the equator, where the sky doesn\'t get dark enough, such as UK summers'**
+  String get highLatitudeHint;
+
+  /// No description provided for @highLatitudeAutomaticHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Seventh of the night beyond 48°, middle of the night nearer the equator'**
+  String get highLatitudeAutomaticHint;
+
+  /// No description provided for @middleOfTheNight.
+  ///
+  /// In en, this message translates to:
+  /// **'Middle of the night'**
+  String get middleOfTheNight;
+
+  /// No description provided for @middleOfTheNightHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Not for UK summers: Isha would fall after midnight'**
+  String get middleOfTheNightHint;
+
+  /// No description provided for @seventhOfTheNight.
+  ///
+  /// In en, this message translates to:
+  /// **'Seventh of the night'**
+  String get seventhOfTheNight;
+
+  /// No description provided for @twilightAngle.
+  ///
+  /// In en, this message translates to:
+  /// **'Twilight angle'**
+  String get twilightAngle;
+
+  /// No description provided for @minuteChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Minute changes'**
+  String get minuteChanges;
+
+  /// No description provided for @minuteChangesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Move a time earlier or later, by up to {max} minutes. Changed times are labelled Adjusted.'**
+  String minuteChangesHint(int max);
+
+  /// No description provided for @minutesValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String minutesValue(String minutes);
+
+  /// Screen-reader label for a minus button.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrease {name}'**
+  String decrease(String name);
+
+  /// Screen-reader label for a plus button.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase {name}'**
+  String increase(String name);
 }
 
 class _AppLocalizationsDelegate

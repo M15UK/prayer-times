@@ -160,6 +160,187 @@ void main() {
     });
   });
 
+  group('the methods to choose from', () {
+    /// A whole year for [latitude], [longitude] with [method].
+    Timetable year({
+      required CalculatedMethod method,
+      double latitude = 24.67,
+      double longitude = 46.69,
+      String timeZone = 'Asia/Riyadh',
+      MethodAngles custom = defaultCustomAngles,
+      HighLatitude highLatitude = HighLatitude.automatic,
+    }) => calculateTimetable(
+      latitude: latitude,
+      longitude: longitude,
+      timeZone: timeZone,
+      year: 2026,
+      method: method,
+      custom: custom,
+      highLatitude: highLatitude,
+    );
+
+    String? time(Timetable timetable, Prayer prayer) =>
+        timetable.days['2026-01-01']?.start[prayer];
+
+    test('every method gives London times in order all year, and says '
+        'which method it was', () {
+      for (final method in CalculatedMethod.values) {
+        final london = year(
+          method: method,
+          latitude: 51.5072,
+          longitude: -0.1276,
+          timeZone: 'Europe/London',
+        );
+
+        expect(calculatedMethodOf(london), method);
+        expect(london.days.length, 365, reason: '$method');
+      }
+    });
+
+    test("knows each method's angles", () {
+      expect(anglesOf(CalculatedMethod.northAmerica), (
+        fajrAngle: 15.0,
+        ishaAngle: 15.0,
+        ishaMinutes: null,
+        maghribAngle: null,
+      ));
+      expect(anglesOf(CalculatedMethod.ummAlQura).ishaMinutes, 90);
+      expect(anglesOf(CalculatedMethod.jafari).maghribAngle, 4);
+      // The library writes "no interval" as 0.
+      expect(anglesOf(CalculatedMethod.tehran).ishaMinutes, isNull);
+      const mine = (
+        fajrAngle: 16.5,
+        ishaAngle: 15.0,
+        ishaMinutes: 80,
+        maghribAngle: null,
+      );
+      expect(anglesOf(CalculatedMethod.custom, custom: mine), mine);
+    });
+
+    test("knows each method's own minute corrections", () {
+      expect(methodCorrections(CalculatedMethod.muslimWorldLeague), {
+        Prayer.dhuhr: 1,
+      });
+      expect(methodCorrections(CalculatedMethod.turkiye), {
+        Prayer.sunrise: -7,
+        Prayer.dhuhr: 5,
+        Prayer.asr: 4,
+        Prayer.maghrib: 7,
+      });
+      expect(methodCorrections(CalculatedMethod.ummAlQura), isEmpty);
+      expect(methodCorrections(CalculatedMethod.custom), isEmpty);
+    });
+
+    test('uses its own angles: ISNA (15°) has a later Fajr and earlier '
+        'Isha than the Muslim World League (18° and 17°)', () {
+      final isna = year(method: CalculatedMethod.northAmerica);
+      final mwl = year(method: CalculatedMethod.muslimWorldLeague);
+
+      expect(
+        minutesOf(time(isna, Prayer.fajr)!),
+        greaterThan(minutesOf(time(mwl, Prayer.fajr)!)),
+      );
+      expect(
+        minutesOf(time(isna, Prayer.isha)!),
+        lessThan(minutesOf(time(mwl, Prayer.isha)!)),
+      );
+    });
+
+    group('custom', () {
+      test("with Jafari's angles, gives Jafari's times", () {
+        final custom = year(
+          method: CalculatedMethod.custom,
+          custom: (
+            fajrAngle: 16,
+            ishaAngle: 14,
+            ishaMinutes: null,
+            maghribAngle: 4,
+          ),
+        );
+        final jafari = year(method: CalculatedMethod.jafari);
+
+        for (final prayer in Prayer.values) {
+          expect(time(custom, prayer), time(jafari, prayer), reason: '$prayer');
+        }
+        expect(calculatedMethodOf(custom), CalculatedMethod.custom);
+      });
+
+      test('can put Isha a number of minutes after Maghrib', () {
+        final custom = year(
+          method: CalculatedMethod.custom,
+          custom: (
+            fajrAngle: 18,
+            ishaAngle: 17,
+            ishaMinutes: 75,
+            maghribAngle: null,
+          ),
+        );
+
+        final maghrib = minutesOf(time(custom, Prayer.maghrib)!);
+        expect(minutesOf(time(custom, Prayer.isha)!) - maghrib, 75);
+      });
+
+      test('puts Maghrib after sunset when given an angle', () {
+        MethodAngles maghribAt(double? angle) => (
+          fajrAngle: 18,
+          ishaAngle: 17,
+          ishaMinutes: null,
+          maghribAngle: angle,
+        );
+        final atSunset = year(
+          method: CalculatedMethod.custom,
+          custom: maghribAt(null),
+        );
+        final atAngle = year(
+          method: CalculatedMethod.custom,
+          custom: maghribAt(4),
+        );
+
+        expect(
+          minutesOf(time(atAngle, Prayer.maghrib)!),
+          greaterThan(minutesOf(time(atSunset, Prayer.maghrib)!)),
+        );
+      });
+    });
+
+    group('the high-latitude rule in a London midsummer', () {
+      Timetable london(HighLatitude rule) => year(
+        method: CalculatedMethod.muslimWorldLeague,
+        latitude: 51.5072,
+        longitude: -0.1276,
+        timeZone: 'Europe/London',
+        highLatitude: rule,
+      );
+      DayTimes? midsummer(HighLatitude rule) => london(rule).days['2026-06-21'];
+
+      test('automatic is the seventh of the night there', () {
+        expect(
+          midsummer(HighLatitude.automatic)?.start,
+          midsummer(HighLatitude.seventhOfTheNight)?.start,
+        );
+      });
+
+      test('the twilight angle gives a later Isha than the seventh', () {
+        expect(
+          minutesOf(midsummer(HighLatitude.twilightAngle)!.start[Prayer.isha]!),
+          greaterThan(
+            minutesOf(
+              midsummer(HighLatitude.seventhOfTheNight)!.start[Prayer.isha]!,
+            ),
+          ),
+        );
+      });
+
+      test('the middle of the night is refused: Isha would be after '
+          'midnight', () {
+        expect(
+          () => london(HighLatitude.middleOfTheNight),
+          throwsA(isA<CalculationUnavailable>()),
+        );
+      });
+    });
+  });
+
   test('knows an official timetable is not calculated', () {
     const official = Timetable(
       sourceId: 'london-unified',

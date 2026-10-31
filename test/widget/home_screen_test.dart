@@ -7,7 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
+import 'package:prayer_times/data/adjusted_timetable.dart';
 import 'package:prayer_times/data/calculated_timetable.dart';
+import 'package:prayer_times/data/calculation_settings.dart';
 import 'package:prayer_times/data/clock_format.dart';
 import 'package:prayer_times/data/display_settings.dart';
 import 'package:prayer_times/data/place.dart';
@@ -47,6 +49,7 @@ Future<void> pumpHome(
   FakeNotifications? notifications,
   Future<void> Function(String json) publishWidgets = noWidgets,
   DisplaySettings? display,
+  CalculationSettings? calculation,
   bool phoneIs24Hour = true,
   DateTime? now,
   Locale locale = const Locale('en'),
@@ -76,6 +79,7 @@ Future<void> pumpHome(
           notifications: notifications ?? FakeNotifications(),
           publishWidgets: publishWidgets,
           display: display ?? DisplaySettings(),
+          calculation: calculation ?? CalculationSettings(),
           now: () => now ?? lunchtime,
         ),
       ),
@@ -207,12 +211,18 @@ void main() {
     expect(find.textContaining('only publishes the standard'), findsNothing);
   });
 
-  testWidgets('switches to Hanafi from the settings screen', (tester) async {
+  testWidgets('switches to Hanafi from the Prayer calculation page', (
+    tester,
+  ) async {
     await pumpHome(tester);
 
     await tester.tap(find.byTooltip('Settings'));
     await finishTransition(tester);
+    await tester.tap(find.text('Prayer calculation'));
+    await finishTransition(tester);
     await tester.tap(find.text('Hanafi'));
+    await tester.pageBack();
+    await finishTransition(tester);
     await tester.pageBack();
     await finishTransition(tester);
 
@@ -378,6 +388,94 @@ void main() {
     expect(find.textContaining('محسوبة على هذا الجهاز'), findsOneWidget);
   });
 
+  group('prayer calculation', () {
+    testWidgets('works the times out again when a choice changes', (
+      tester,
+    ) async {
+      final calculation = CalculationSettings();
+      var loads = 0;
+      await pumpHome(
+        tester,
+        calculation: calculation,
+        loadTimes: (chosen, now) {
+          loads++;
+          return showing(sampleTimetable())(chosen, now);
+        },
+      );
+      expect(loads, 1);
+
+      calculation.minutes.value = {Prayer.fajr: 2};
+      await tester.pump();
+
+      expect(loads, 2);
+    });
+
+    testWidgets('an older, slower load never replaces newer times', (
+      tester,
+    ) async {
+      final calculation = CalculationSettings();
+      final first = Completer<ResolvedTimes>();
+      final second = Completer<ResolvedTimes>();
+      final loads = [first, second];
+      final published = <String>[];
+      await pumpHome(
+        tester,
+        calculation: calculation,
+        loadTimes: (_, _) => loads.removeAt(0).future,
+        publishWidgets: (json) async => published.add(json),
+      );
+
+      calculation.minutes.value = {Prayer.fajr: 2};
+      await tester.pump();
+      second.complete((
+        timetable: adjustTimetable(sampleTimetable(), const {Prayer.fajr: 2}),
+        place: london,
+      ));
+      await tester.pump();
+      first.complete((timetable: sampleTimetable(), place: london));
+      await tester.pump();
+
+      expect(find.text('05:06'), findsOneWidget);
+      expect(published, hasLength(1));
+      expect(published.single, contains('"05:06"'));
+    });
+
+    testWidgets('labels adjusted times with what moved', (tester) async {
+      final adjusted = adjustTimetable(sampleTimetable(), const {
+        Prayer.fajr: 2,
+      });
+
+      await pumpHome(tester, loadTimes: showing(adjusted));
+
+      expect(find.text('05:06'), findsOneWidget); // published as 05:04
+      expect(find.textContaining('Adjusted: Fajr'), findsOneWidget);
+      expect(
+        find.textContaining('London Unified Prayer Timetable'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('says when minute changes put the times out of order, with '
+        'a way to fix them', (tester) async {
+      await pumpHome(
+        tester,
+        loadTimes: (_, _) async => throw const TimesOutOfOrder('test'),
+      );
+
+      expect(
+        find.text(
+          'Your minute changes put the prayer times out of order. '
+          'Please change them.',
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Prayer calculation'));
+      await finishTransition(tester);
+
+      expect(find.text('Official timetables first'), findsOneWidget);
+    });
+  });
+
   testWidgets('labels as calculated even a method it does not know', (
     tester,
   ) async {
@@ -468,6 +566,10 @@ void main() {
 
       expect(find.textContaining("can't be calculated"), findsOneWidget);
       expect(find.text('Choose a place'), findsOneWidget);
+      // The user's own settings can cause it too.
+      await tester.tap(find.text('Prayer calculation'));
+      await finishTransition(tester);
+      expect(find.text('Official timetables first'), findsOneWidget);
     });
 
     testWidgets('opens the place list by itself on a first launch', (

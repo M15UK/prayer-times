@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:prayer_times/data/adjusted_timetable.dart';
+import 'package:prayer_times/data/calculation_settings.dart';
 import 'package:prayer_times/data/display_settings.dart';
 import 'package:prayer_times/data/prayer_alerts.dart';
 import 'package:prayer_times/data/timetable.dart';
@@ -20,6 +22,7 @@ void main() {
     ValueNotifier<PrayerAlerts> alerts,
     FakeNotifications phone, {
     Timetable? timetable,
+    ValueNotifier<Timetable?>? shown,
     Locale locale = const Locale('en'),
   }) {
     // A tall, phone-like screen, so the whole list is built without scrolling.
@@ -37,7 +40,8 @@ void main() {
           alerts: alerts,
           notifications: phone,
           display: DisplaySettings(),
-          timetable: timetable,
+          calculation: CalculationSettings(),
+          timetable: shown ?? ValueNotifier(timetable),
         ),
       ),
     );
@@ -55,6 +59,23 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
 
     expect(find.text('Time format'), findsOneWidget);
+  });
+
+  testWidgets('opens the Prayer calculation page, which now has the Asr '
+      'choice', (tester) async {
+    await pumpSettings(
+      tester,
+      ValueNotifier(PrayerAlerts.on),
+      FakeNotifications(),
+    );
+    expect(find.text('Hanafi'), findsNothing);
+
+    await tester.tap(find.text('Prayer calculation'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.text('Official timetables first'), findsOneWidget);
+    expect(find.text('Hanafi'), findsOneWidget);
   });
 
   group('the source of the times on screen', () {
@@ -78,6 +99,25 @@ void main() {
         locale: const Locale('ar'),
       );
       expect(find.text('المصدر: تقويم أم القرى'), findsOneWidget);
+    });
+
+    testWidgets('follows the times on screen, e.g. once they are adjusted', (
+      tester,
+    ) async {
+      final shown = ValueNotifier<Timetable?>(sampleSaudiTimetable());
+      await pumpSettings(
+        tester,
+        ValueNotifier(PrayerAlerts.on),
+        FakeNotifications(),
+        shown: shown,
+      );
+
+      shown.value = adjustTimetable(sampleSaudiTimetable(), const {
+        Prayer.fajr: 2,
+      });
+      await tester.pump();
+
+      expect(find.textContaining('Adjusted: Fajr'), findsOneWidget);
     });
 
     testWidgets('is left out before any times have loaded', (tester) async {

@@ -91,6 +91,7 @@ class Timetable {
     required this.sourceName,
     required this.timeZone,
     required this.days,
+    this.adjustments = const {},
   });
 
   /// Reads a timetable from downloaded JSON. Throws [FormatException] if it
@@ -134,6 +135,10 @@ class Timetable {
 
   /// Times for each date, keyed by "yyyy-mm-dd".
   final Map<String, DayTimes> days;
+
+  /// Minutes the user moved each time by on the phone (none: as the source
+  /// publishes them). Not part of the API format, so never saved with it.
+  final Map<Prayer, int> adjustments;
 
   Map<String, Object> toJson() => {
     'sourceId': sourceId,

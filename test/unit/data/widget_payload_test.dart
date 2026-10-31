@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
+import 'package:prayer_times/data/adjusted_timetable.dart';
 import 'package:prayer_times/data/app_colour.dart';
 import 'package:prayer_times/data/calculated_timetable.dart';
 import 'package:prayer_times/data/clock_format.dart';
@@ -108,6 +109,42 @@ void main() {
       'at': DateTime.utc(2026, 10, 25, 14, 57).millisecondsSinceEpoch,
       'counts': true,
     });
+  });
+
+  test('marks adjusted times too', () {
+    final payload = widgetPayload(
+      times: (
+        timetable: adjustTimetable(sampleTimetable(), const {Prayer.fajr: 2}),
+        place: london,
+      ),
+      now: lunchtime,
+      asr: AsrMethod.standard,
+      text: english,
+    );
+
+    expect(payload['calculated'], 'Adjusted');
+  });
+
+  test('marks calculated times that are adjusted with both', () {
+    final calculated = calculateTimetable(
+      latitude: 53.4808,
+      longitude: -2.2426,
+      timeZone: 'Europe/London',
+      year: 2026,
+      method: CalculatedMethod.muslimWorldLeague,
+    );
+
+    final payload = widgetPayload(
+      times: (
+        timetable: adjustTimetable(calculated, const {Prayer.fajr: 2}),
+        place: null,
+      ),
+      now: lunchtime,
+      asr: AsrMethod.standard,
+      text: english,
+    );
+
+    expect(payload['calculated'], 'Calculated · Adjusted');
   });
 
   test('says when the times are calculated, for your own location, and '

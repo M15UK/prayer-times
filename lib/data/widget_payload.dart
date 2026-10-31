@@ -7,6 +7,7 @@ import 'package:intl/intl.dart' show Bidi, DateFormat;
 import 'package:timezone/timezone.dart' as tz;
 
 import 'package:prayer_times/data/app_colour.dart';
+import 'package:prayer_times/data/adjusted_timetable.dart';
 import 'package:prayer_times/data/calculated_timetable.dart';
 import 'package:prayer_times/data/clock_format.dart';
 import 'package:prayer_times/data/place_times.dart';
@@ -43,8 +44,12 @@ Map<String, Object> widgetPayload({
     // For the phone's AM/PM words in 12-hour time.
     'lang': text.localeName,
     'place': times.place?.nameFor(text.localeName) ?? text.yourLocation,
-    // Every widget shows this mark, so calculated times never look official.
-    'calculated': isCalculated(timetable) ? text.calculatedMark : '',
+    // Every widget shows this mark, so calculated or adjusted times never
+    // look official.
+    'calculated': [
+      if (isCalculated(timetable)) text.calculatedMark,
+      if (isAdjusted(timetable)) text.adjustedMark,
+    ].join(' · '),
     'openApp': text.widgetOpenApp,
     // Display choices, left out when they are the defaults. With no
     // 'is24Hour', the widget follows the phone's own setting at each redraw.

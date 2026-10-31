@@ -50,7 +50,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get useMyLocationHint =>
-      'The nearest official timetable, or times calculated for where you are';
+      'Official or calculated times for where you are, as set in Prayer calculation';
 
   @override
   String get searchPlaces => 'Search for a city or mosque';
@@ -67,7 +67,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calculationUnavailable =>
-      'Prayer times can\'t be calculated for where you are (for example, very near the poles). Please choose a place.';
+      'Prayer times can\'t be calculated for where you are with these settings (for example, very near the poles, or with Isha after midnight). Please choose a place, or change Prayer calculation in Settings.';
 
   @override
   String get loadingTimes => 'Loading prayer times';
@@ -111,12 +111,60 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get calculatedUmmAlQura =>
-      'Calculated on this phone (Umm al-Qura method)';
+  String calculatedWith(String method) {
+    return 'Calculated on this phone ($method method)';
+  }
 
   @override
-  String get calculatedMuslimWorldLeague =>
-      'Calculated on this phone (Muslim World League method)';
+  String methodName(String method) {
+    String _temp0 = intl.Intl.selectLogic(method, {
+      'algerian': 'Algerian',
+      'dubai': 'Dubai',
+      'egyptian': 'Egyptian',
+      'france': 'French UOIF',
+      'gulfRegion': 'Gulf',
+      'indonesian': 'Indonesian',
+      'jafari': 'Jafari',
+      'jordan': 'Jordanian',
+      'karachi': 'Karachi',
+      'kuwait': 'Kuwaiti',
+      'moonsightingCommittee': 'Moonsighting Committee',
+      'morocco': 'Moroccan',
+      'muslimWorldLeague': 'Muslim World League',
+      'northAmerica': 'ISNA',
+      'portugal': 'Portuguese',
+      'qatar': 'Qatari',
+      'russia': 'Russian',
+      'singapore': 'Singapore',
+      'tehran': 'Tehran',
+      'tunisia': 'Tunisian',
+      'turkiye': 'Turkish Diyanet',
+      'ummAlQura': 'Umm al-Qura',
+      'custom': 'Custom',
+      'other': '',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String adjustedFrom(String changes, String source) {
+    return 'Adjusted: $changes from $source';
+  }
+
+  @override
+  String minuteChange(String prayer, String change) {
+    return '$prayer $change min';
+  }
+
+  @override
+  String get listSeparator => ', ';
+
+  @override
+  String get adjustedMark => 'Adjusted';
+
+  @override
+  String get timesOutOfOrder =>
+      'Your minute changes put the prayer times out of order. Please change them.';
 
   @override
   String get calculated => 'Calculated on this phone';
@@ -278,4 +326,108 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get timesShownHint =>
       'Hidden times are still counted down to, and their alerts still come.';
+
+  @override
+  String get prayerCalculation => 'Prayer calculation';
+
+  @override
+  String get prayerCalculationHint =>
+      'Method, Asr, high latitudes and minute changes';
+
+  @override
+  String get officialFirst => 'Official timetables first';
+
+  @override
+  String get officialFirstOn =>
+      'Official times where there\'s one (London, Saudi Arabia); your method everywhere else';
+
+  @override
+  String get officialFirstOff =>
+      'Your method everywhere, always labelled Calculated';
+
+  @override
+  String get method => 'Method';
+
+  @override
+  String get methodAutomatic => 'Automatic';
+
+  @override
+  String get methodAutomaticHint =>
+      'Umm al-Qura in Saudi Arabia, Muslim World League elsewhere';
+
+  @override
+  String angleOf(String prayer, String angle) {
+    return '$prayer $angle';
+  }
+
+  @override
+  String minutesAfterSunset(String prayer, int minutes) {
+    return '$prayer $minutes min after sunset';
+  }
+
+  @override
+  String get limitedBySeason => 'limited by season';
+
+  @override
+  String get customAngles => 'Custom angles';
+
+  @override
+  String get customAnglesHint =>
+      'How far the sun is below the horizon at each time';
+
+  @override
+  String get byAngle => 'Angle';
+
+  @override
+  String get byMinutesAfterSunset => 'Minutes after sunset';
+
+  @override
+  String get atSunset => 'At sunset';
+
+  @override
+  String get highLatitude => 'High-latitude rule';
+
+  @override
+  String get highLatitudeHint =>
+      'For places far from the equator, where the sky doesn\'t get dark enough, such as UK summers';
+
+  @override
+  String get highLatitudeAutomaticHint =>
+      'Seventh of the night beyond 48°, middle of the night nearer the equator';
+
+  @override
+  String get middleOfTheNight => 'Middle of the night';
+
+  @override
+  String get middleOfTheNightHint =>
+      'Not for UK summers: Isha would fall after midnight';
+
+  @override
+  String get seventhOfTheNight => 'Seventh of the night';
+
+  @override
+  String get twilightAngle => 'Twilight angle';
+
+  @override
+  String get minuteChanges => 'Minute changes';
+
+  @override
+  String minuteChangesHint(int max) {
+    return 'Move a time earlier or later, by up to $max minutes. Changed times are labelled Adjusted.';
+  }
+
+  @override
+  String minutesValue(String minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String decrease(String name) {
+    return 'Decrease $name';
+  }
+
+  @override
+  String increase(String name) {
+    return 'Increase $name';
+  }
 }

@@ -6,8 +6,10 @@ import 'package:hijri/hijri_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:timezone/timezone.dart' as tz;
 
+import 'package:prayer_times/data/adjusted_timetable.dart';
 import 'package:prayer_times/data/alert_scheduler.dart';
 import 'package:prayer_times/data/calculated_timetable.dart';
+import 'package:prayer_times/data/calculation_settings.dart';
 import 'package:prayer_times/data/display_settings.dart';
 import 'package:prayer_times/data/phone_notifications.dart';
 import 'package:prayer_times/data/place.dart';
@@ -21,6 +23,7 @@ import 'package:prayer_times/l10n/app_language.dart';
 import 'package:prayer_times/l10n/app_localizations.dart';
 import 'package:prayer_times/l10n/prayer_name.dart';
 import 'package:prayer_times/screens/alert_permission.dart';
+import 'package:prayer_times/screens/calculation_screen.dart';
 import 'package:prayer_times/screens/place_screen.dart';
 import 'package:prayer_times/screens/settings_screen.dart';
 import 'package:prayer_times/screens/times_table.dart';
@@ -38,6 +41,7 @@ class HomeScreen extends StatefulWidget {
     required this.alerts,
     required this.notifications,
     required this.display,
+    required this.calculation,
     this.publishWidgets = noWidgets,
     this.isFirstLaunch = false,
     this.now = DateTime.now,
@@ -63,6 +67,10 @@ class HomeScreen extends StatefulWidget {
 
   /// Theme, colour, time format and times shown (the Display page).
   final DisplaySettings display;
+
+  /// How the times are worked out (the Prayer calculation page). [loadTimes]
+  /// reads it; any change loads the times again.
+  final CalculationSettings calculation;
 
   /// True on the app's very first run: if there's no location then, the
   /// place list opens by itself.
@@ -93,18 +101,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   late final Listenable _timesLook;
 
   /// The timetable on screen, for Settings to name its source.
-  Timetable? _shown;
+  final _shown = ValueNotifier<Timetable?>(null);
 
   /// Starts loading. Times that load go on to the alerts. The screen shows
   /// any error; it is also logged, so an unexpected one is never invisible
   /// (and never counts as "unhandled" in the moment before the screen
   /// listens).
   Future<ResolvedTimes> _load() {
-    _shown = null; // until the new times arrive
+    _shown.value = null; // until the new times arrive
     final times = widget.loadTimes(widget.place.value, widget.now());
     unawaited(
       times.then<void>(
-        _afterLoad,
+        // Only the newest load: an older, slower one (e.g. before a minute
+        // change) must never reach the alerts and widgets after it.
+        (loaded) => identical(times, _times) ? _afterLoad(loaded) : null,
         onError: (Object error, StackTrace stack) =>
             log('Loading prayer times failed', error: error, stackTrace: stack),
       ),
@@ -117,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _afterLoad(ResolvedTimes times) async {
     if (!mounted) return;
     // Before the permission question, which can take a while to answer.
-    _shown = times.timetable;
+    _shown.value = times.timetable;
     _widgets.timesLoaded(times);
     if (widget.alerts.value == PrayerAlerts.askFirst) {
       await turnOnAlerts(
@@ -162,6 +172,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       widget.display.hiddenTimes,
     ]);
     _times = _load();
+    widget.calculation.changes.addListener(_reload);
     _ticker = Timer.periodic(
       const Duration(seconds: 1),
       (_) => setState(() {}),
@@ -197,9 +208,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    widget.calculation.changes.removeListener(_reload);
     _ticker.cancel();
     _scheduler.dispose();
     _widgets.dispose();
+    _shown.dispose();
     super.dispose();
   }
 
@@ -228,7 +241,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         alerts: widget.alerts,
         notifications: widget.notifications,
         display: widget.display,
+        calculation: widget.calculation,
         timetable: _shown,
+      ),
+    ),
+  );
+
+  void _openCalculation() => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => CalculationScreen(
+        calculation: widget.calculation,
+        asrMethod: widget.asrMethod,
       ),
     ),
   );
@@ -269,6 +292,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         message: text.calculationUnavailable,
         action: text.choosePlace,
         onPressed: _openPlaces,
+        // The user's own calculation settings can cause it too.
+        otherAction: text.prayerCalculation,
+        onOther: _openCalculation,
+      ),
+      AsyncSnapshot(error: TimesOutOfOrder()) => _Notice(
+        message: text.timesOutOfOrder,
+        action: text.prayerCalculation,
+        onPressed: _openCalculation,
       ),
       _ => _Notice(
         message: text.loadFailed,
@@ -361,9 +392,10 @@ class _TodayView extends StatelessWidget {
         if (asr == AsrMethod.hanafi && day.asrHanafi == null)
           Text(text.hanafiNotPublished, style: smallText),
         const SizedBox(height: 16),
-        // Official sources are named in Settings; calculated times must
-        // always say so here.
-        if (isCalculated(timetable)) _SourceLabel(timetable: timetable),
+        // Official sources are named in Settings; calculated or adjusted
+        // times must always say so here.
+        if (isCalculated(timetable) || isAdjusted(timetable))
+          _SourceLabel(timetable: timetable),
       ],
     );
   }
@@ -431,8 +463,8 @@ class _PlaceButton extends StatelessWidget {
   }
 }
 
-/// Shown only for calculated times: says so, with an icon, so they can never
-/// be mistaken for an official timetable.
+/// Shown only for calculated or adjusted times: says so, with an icon, so
+/// they can never be mistaken for an official timetable.
 class _SourceLabel extends StatelessWidget {
   const _SourceLabel({required this.timetable});
 
@@ -443,7 +475,11 @@ class _SourceLabel extends StatelessWidget {
     final style = Theme.of(context).textTheme.bodySmall;
     return Row(
       children: [
-        Icon(Icons.calculate_outlined, size: 16, color: style?.color),
+        Icon(
+          isCalculated(timetable) ? Icons.calculate_outlined : Icons.tune,
+          size: 16,
+          color: style?.color,
+        ),
         const SizedBox(width: 4),
         Expanded(
           child: Text(
@@ -489,17 +525,23 @@ class _Dates extends StatelessWidget {
   }
 }
 
-/// A message instead of times, with one way forward.
+/// A message instead of times, with a way forward (or two).
 class _Notice extends StatelessWidget {
   const _Notice({
     required this.message,
     required this.action,
     required this.onPressed,
+    this.otherAction,
+    this.onOther,
   });
 
   final String message;
   final String action;
   final VoidCallback onPressed;
+
+  /// An optional second, quieter way forward.
+  final String? otherAction;
+  final VoidCallback? onOther;
 
   @override
   Widget build(BuildContext context) {
@@ -512,6 +554,8 @@ class _Notice extends StatelessWidget {
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 16),
             FilledButton(onPressed: onPressed, child: Text(action)),
+            if (otherAction case final other?)
+              TextButton(onPressed: onOther, child: Text(other)),
           ],
         ),
       ),

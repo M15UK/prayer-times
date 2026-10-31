@@ -4,9 +4,12 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
+import 'package:prayer_times/data/adjusted_timetable.dart';
 import 'package:prayer_times/data/calculated_timetable.dart';
+import 'package:prayer_times/data/calculation_settings.dart';
 import 'package:prayer_times/data/place.dart';
 import 'package:prayer_times/data/place_times.dart';
+import 'package:prayer_times/data/timetable.dart';
 import 'package:prayer_times/data/timetable_repository.dart';
 
 import 'real_places.dart';
@@ -35,8 +38,10 @@ void main() {
     String zone = 'Europe/London',
     int status = 200,
     List<Uri>? requested,
+    Calculation calculation = defaultCalculation,
   }) => loadPlaceTimes(
     chosen: chosen,
+    calculation: calculation,
     now: now ?? DateTime.utc(2026, 10, 25, 12, 9),
     places: places,
     repository: TimetableRepository(
@@ -170,6 +175,110 @@ void main() {
           zone: 'Arctic/Longyearbyen',
         ),
         throwsA(isA<CalculationUnavailable>()),
+      );
+    });
+  });
+
+  group('the Prayer calculation choices', () {
+    /// The default choices with some changed.
+    Calculation choosing({
+      bool officialFirst = true,
+      CalculatedMethod? method,
+      Map<Prayer, int> minutes = const {},
+    }) => (
+      officialFirst: officialFirst,
+      method: method,
+      custom: defaultCustomAngles,
+      highLatitude: HighLatitude.automatic,
+      minutes: minutes,
+    );
+
+    test('official first: London stays official whatever the method', () async {
+      final times = await load(
+        chosen: london,
+        calculation: choosing(method: CalculatedMethod.northAmerica),
+      );
+
+      expect(isCalculated(times.timetable), isFalse);
+    });
+
+    test('official first: the chosen method fills in where there is no '
+        'official timetable', () async {
+      final manchester = await load(
+        chosen: null,
+        position: (latitude: 53.4808, longitude: -2.2426),
+        calculation: choosing(method: CalculatedMethod.northAmerica),
+      );
+      final offline = await load(
+        chosen: riyadh,
+        status: 404,
+        calculation: choosing(method: CalculatedMethod.karachi),
+      );
+
+      expect(
+        calculatedMethodOf(manchester.timetable),
+        CalculatedMethod.northAmerica,
+      );
+      expect(calculatedMethodOf(offline.timetable), CalculatedMethod.karachi);
+    });
+
+    test('not official first: a chosen place is calculated with the method, '
+        'with no download', () async {
+      final requested = <Uri>[];
+      final times = await load(
+        chosen: london,
+        requested: requested,
+        calculation: choosing(
+          officialFirst: false,
+          method: CalculatedMethod.northAmerica,
+        ),
+      );
+
+      expect(
+        calculatedMethodOf(times.timetable),
+        CalculatedMethod.northAmerica,
+      );
+      expect(times.place, london);
+      expect(requested, isEmpty);
+    });
+
+    test('not official first: automatic calculates even near Riyadh, with '
+        "Saudi Arabia's own method", () async {
+      final requested = <Uri>[];
+      final times = await load(
+        chosen: null,
+        position: (latitude: 24.70, longitude: 46.72),
+        zone: 'Asia/Riyadh',
+        requested: requested,
+        calculation: choosing(officialFirst: false),
+      );
+
+      expect(calculatedMethodOf(times.timetable), CalculatedMethod.ummAlQura);
+      expect(times.place, isNull);
+      expect(requested, isEmpty);
+    });
+
+    test('minute changes move the official times too, and say so', () async {
+      final times = await load(
+        chosen: london,
+        calculation: choosing(minutes: const {Prayer.fajr: 2}),
+      );
+
+      expect(isCalculated(times.timetable), isFalse);
+      expect(times.timetable.adjustments, {Prayer.fajr: 2});
+      expect(
+        times.timetable.days['2026-10-25']?.start[Prayer.fajr],
+        '05:06', // published as 05:04
+      );
+    });
+
+    test('minute changes that put the times out of order are refused', () {
+      expect(
+        load(
+          chosen: london,
+          calculation: choosing(minutes: const {Prayer.asr: 160}),
+        ),
+        throwsA(isA<TimesOutOfOrder>()),
       );
     });
   });
