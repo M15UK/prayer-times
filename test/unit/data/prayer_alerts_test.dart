@@ -44,6 +44,7 @@ void main() {
         now: lunchtime,
         asr: AsrMethod.standard,
         text: english,
+        is24Hour: true,
       );
 
       expect(alerts, hasLength(8));
@@ -59,6 +60,7 @@ void main() {
         now: lunchtime,
         asr: AsrMethod.hanafi,
         text: english,
+        is24Hour: true,
       );
 
       expect(alerts.first.body, '14:57 · East London Mosque');
@@ -78,6 +80,7 @@ void main() {
         now: lunchtime,
         asr: AsrMethod.standard,
         text: english,
+        is24Hour: true,
       );
 
       // Ten days ahead: today's last three prayers and nine full days. Well
@@ -96,10 +99,23 @@ void main() {
         now: DateTime.utc(2026, 10, 25, 9),
         asr: AsrMethod.standard,
         text: arabic,
+        is24Hour: true,
       );
 
       expect(alerts.first.title, 'العصر');
       expect(alerts.first.body, '14:53 · الرياض');
+    });
+
+    test('writes the time in 12-hour time when chosen', () {
+      final alerts = planAlerts(
+        times: (timetable: sampleTimetable(), place: london),
+        now: lunchtime,
+        asr: AsrMethod.standard,
+        text: english,
+        is24Hour: false,
+      );
+
+      expect(alerts.first.body, '2:17 PM · London');
     });
   });
 }

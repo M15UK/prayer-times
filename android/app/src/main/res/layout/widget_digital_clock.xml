@@ -27,6 +27,7 @@
             android:orientation="horizontal">
 
             <TextClock
+                android:id="@+id/clock_hours"
                 style="@style/WidgetText"
                 android:layout_width="72dp"
                 android:layout_height="60dp"

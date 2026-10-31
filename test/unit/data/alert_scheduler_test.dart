@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
 import 'package:prayer_times/data/alert_scheduler.dart';
+import 'package:prayer_times/data/clock_format.dart';
 import 'package:prayer_times/data/place.dart';
 import 'package:prayer_times/data/prayer_alerts.dart';
 import 'package:prayer_times/data/timetable.dart';
@@ -20,12 +21,14 @@ void main() {
 
   late ValueNotifier<AsrMethod> asr;
   late ValueNotifier<PrayerAlerts> alerts;
+  late ValueNotifier<ClockFormat> clock;
   // Every list of alerts handed to the phone, oldest first.
   late List<List<PrayerAlert>> replaced;
 
   setUp(() {
     asr = ValueNotifier(AsrMethod.standard);
     alerts = ValueNotifier(PrayerAlerts.askFirst);
+    clock = ValueNotifier(ClockFormat.phone);
     replaced = [];
   });
 
@@ -35,6 +38,7 @@ void main() {
     final scheduler = AlertScheduler(
       asr: asr,
       alerts: alerts,
+      clock: clock,
       replaceAll: replaceAll ?? (planned) async => replaced.add(planned),
       now: () => DateTime.utc(2026, 10, 25, 12, 9),
     );
@@ -146,6 +150,7 @@ void main() {
         AlertScheduler(
             asr: asr,
             alerts: alerts,
+            clock: clock,
             replaceAll: (planned) async => replaced.add(planned),
             now: () => now,
           )
@@ -165,6 +170,28 @@ void main() {
       'Maghrib',
       'Isha',
     ]);
+  });
+
+  test('writes the times in 12-hour time when chosen', () async {
+    await planned();
+
+    clock.value = ClockFormat.twelveHour;
+    await pumpEventQueue();
+
+    expect(replaced.last.first.body, '2:17 PM · London');
+  });
+
+  test("follows the phone's 12/24-hour setting, planning again only when it "
+      'changes', () async {
+    final scheduler = await planned();
+
+    scheduler.phoneClockChanged(true); // as first assumed: nothing to do
+    await pumpEventQueue();
+    expect(replaced, hasLength(1));
+
+    scheduler.phoneClockChanged(false);
+    await pumpEventQueue();
+    expect(replaced.last.first.body, '2:17 PM · London');
   });
 
   test('stops listening once disposed', () async {

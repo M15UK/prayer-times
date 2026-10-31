@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer' show log;
 import 'dart:io';
 
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
@@ -9,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
 import 'package:prayer_times/data/device_location.dart';
+import 'package:prayer_times/data/display_settings.dart';
 import 'package:prayer_times/data/phone_notifications.dart';
 import 'package:prayer_times/data/place.dart';
 import 'package:prayer_times/data/place_times.dart';
@@ -21,6 +23,7 @@ import 'package:prayer_times/data/widget_channel.dart';
 import 'package:prayer_times/data/widget_publisher.dart';
 import 'package:prayer_times/l10n/app_language.dart';
 import 'package:prayer_times/l10n/app_localizations.dart';
+import 'package:prayer_times/screens/app_theme.dart';
 import 'package:prayer_times/screens/home_screen.dart';
 
 Future<void> main() async {
@@ -79,6 +82,7 @@ Future<void> main() async {
       ),
       notifications: notifications,
       publishWidgets: publishToAndroidWidgets,
+      display: DisplaySettings.saved(storage),
     ),
   );
 }
@@ -93,6 +97,7 @@ class PrayerTimesApp extends StatelessWidget {
     required this.language,
     required this.alerts,
     required this.notifications,
+    required this.display,
     this.publishWidgets = noWidgets,
     this.isFirstLaunch = false,
   });
@@ -118,37 +123,59 @@ class PrayerTimesApp extends StatelessWidget {
   /// True on the app's very first run.
   final bool isFirstLaunch;
 
+  /// Theme, colour, time format and times shown (the Display page).
+  final DisplaySettings display;
+
   @override
   Widget build(BuildContext context) {
-    // Rebuilds the whole app in the new language the moment it is chosen.
-    return ValueListenableBuilder(
-      valueListenable: language,
-      builder: (context, chosen, _) => MaterialApp(
-        // The title is translated, so it is built once the language is known.
-        onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-        // null follows the phone's language. Arabic also flips the layout to
-        // right-to-left automatically.
-        locale: chosen.locale,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        // Light and dark themes; the phone's own setting picks between them.
-        theme: ThemeData(colorSchemeSeed: Colors.teal),
-        darkTheme: ThemeData(
-          colorSchemeSeed: Colors.teal,
-          brightness: Brightness.dark,
-        ),
-        home: HomeScreen(
-          loadTimes: loadTimes,
-          place: place,
-          places: places,
-          isFirstLaunch: isFirstLaunch,
-          asrMethod: asrMethod,
-          language: language,
-          alerts: alerts,
-          notifications: notifications,
-          publishWidgets: publishWidgets,
+    // Always inside the wallpaper-colour builder, so choosing wallpaper
+    // colours never rebuilds the screens (which would close Settings).
+    return DynamicColorBuilder(
+      builder: (lightWallpaper, darkWallpaper) => ListenableBuilder(
+        // The whole app redraws the moment the language, theme or colour
+        // is chosen.
+        listenable: Listenable.merge([
+          language,
+          display.themeMode,
+          display.colour,
+        ]),
+        builder: (context, _) => MaterialApp(
+          // The title is translated, so it is built once the language is
+          // known.
+          onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+          // null follows the phone's language. Arabic also flips the layout
+          // to right-to-left automatically.
+          locale: language.value.locale,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          theme: appTheme(
+            display.colour.value,
+            Brightness.light,
+            lightWallpaper,
+          ),
+          darkTheme: appTheme(
+            display.colour.value,
+            Brightness.dark,
+            darkWallpaper,
+          ),
+          // System: the phone's own light/dark setting picks between them.
+          themeMode: display.themeMode.value,
+          home: _home(),
         ),
       ),
     );
   }
+
+  Widget _home() => HomeScreen(
+    loadTimes: loadTimes,
+    place: place,
+    places: places,
+    isFirstLaunch: isFirstLaunch,
+    asrMethod: asrMethod,
+    language: language,
+    alerts: alerts,
+    notifications: notifications,
+    publishWidgets: publishWidgets,
+    display: display,
+  );
 }

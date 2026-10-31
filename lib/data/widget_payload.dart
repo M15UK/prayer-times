@@ -6,7 +6,9 @@ import 'package:hijri/hijri_calendar.dart';
 import 'package:intl/intl.dart' show Bidi, DateFormat;
 import 'package:timezone/timezone.dart' as tz;
 
+import 'package:prayer_times/data/app_colour.dart';
 import 'package:prayer_times/data/calculated_timetable.dart';
+import 'package:prayer_times/data/clock_format.dart';
 import 'package:prayer_times/data/place_times.dart';
 import 'package:prayer_times/data/prayer_clock.dart';
 import 'package:prayer_times/data/timetable.dart';
@@ -27,6 +29,9 @@ Map<String, Object> widgetPayload({
   required DateTime now,
   required AsrMethod asr,
   required AppLocalizations text,
+  Set<Prayer> hidden = const {},
+  ClockFormat clock = ClockFormat.phone,
+  AppColour colour = AppColour.teal,
 }) {
   final timetable = times.timetable;
   final zone = tz.getLocation(timetable.timeZone);
@@ -41,10 +46,21 @@ Map<String, Object> widgetPayload({
     // Every widget shows this mark, so calculated times never look official.
     'calculated': isCalculated(timetable) ? text.calculatedMark : '',
     'openApp': text.widgetOpenApp,
+    // Display choices, left out when they are the defaults. With no
+    // 'is24Hour', the widget follows the phone's own setting at each redraw.
+    'is24Hour': ?clock.forced24Hour,
+    if (colour.widgetColours case final colours?)
+      'colours': {
+        'card': colours.card,
+        'pill': colours.pill,
+        'onPill': colours.onPill,
+        'icon': colours.icon,
+      },
+    if (colour == AppColour.wallpaper) 'wallpaper': true,
     'days': [
       for (var i = 0; i < widgetDays; i++)
         if (timetable.days[dates[i]] case final day?)
-          _day(zone, dates[i], dates[i + 1], day, asr, text),
+          _day(zone, dates[i], dates[i + 1], day, asr, text, hidden),
     ],
   };
 }
@@ -57,6 +73,7 @@ Map<String, Object> _day(
   DayTimes day,
   AsrMethod asr,
   AppLocalizations text,
+  Set<Prayer> hidden,
 ) {
   final calendarDate = DateTime.parse(date);
   // The same Umm al-Qura date the app shows, with a short month name.
@@ -74,6 +91,9 @@ Map<String, Object> _day(
             'time': time,
             'at': _ms(zone, date, time),
             'counts': countdownPrayers.contains(prayer),
+            // Kept, not dropped: the widget hides its column, so the strip's
+            // icons stay with their prayers.
+            if (hidden.contains(prayer)) 'hidden': true,
           },
     ],
   };

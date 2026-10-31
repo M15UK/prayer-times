@@ -391,6 +391,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{month, select, m1{Muh} m2{Saf} m3{Rabi I} m4{Rabi II} m5{Jum I} m6{Jum II} m7{Raj} m8{Sha} m9{Ram} m10{Shaw} m11{Dhul Q} m12{Dhul H} other{}}'**
   String hijriMonthShort(String month);
+
+  /// No description provided for @am.
+  ///
+  /// In en, this message translates to:
+  /// **'AM'**
+  String get am;
+
+  /// No description provided for @pm.
+  ///
+  /// In en, this message translates to:
+  /// **'PM'**
+  String get pm;
+
+  /// No description provided for @display.
+  ///
+  /// In en, this message translates to:
+  /// **'Display'**
+  String get display;
+
+  /// No description provided for @displayHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme, colour, time format and times shown'**
+  String get displayHint;
+
+  /// No description provided for @theme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get theme;
+
+  /// No description provided for @asPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'As the phone'**
+  String get asPhone;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// No description provided for @colour.
+  ///
+  /// In en, this message translates to:
+  /// **'Colour'**
+  String get colour;
+
+  /// No description provided for @colourTeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Teal'**
+  String get colourTeal;
+
+  /// No description provided for @colourBlue.
+  ///
+  /// In en, this message translates to:
+  /// **'Blue'**
+  String get colourBlue;
+
+  /// No description provided for @colourGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Green'**
+  String get colourGreen;
+
+  /// No description provided for @colourPurple.
+  ///
+  /// In en, this message translates to:
+  /// **'Purple'**
+  String get colourPurple;
+
+  /// No description provided for @colourAmber.
+  ///
+  /// In en, this message translates to:
+  /// **'Amber'**
+  String get colourAmber;
+
+  /// No description provided for @colourWallpaper.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallpaper colours'**
+  String get colourWallpaper;
+
+  /// No description provided for @colourWallpaperHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Android 12 and newer; other phones show teal'**
+  String get colourWallpaperHint;
+
+  /// No description provided for @colourHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Widgets change colour on Android 12 and newer'**
+  String get colourHint;
+
+  /// No description provided for @asPhoneClockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A change on the phone shows when the app next starts'**
+  String get asPhoneClockHint;
+
+  /// No description provided for @timeFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Time format'**
+  String get timeFormat;
+
+  /// No description provided for @timeFormat12.
+  ///
+  /// In en, this message translates to:
+  /// **'12-hour (5:53 PM)'**
+  String get timeFormat12;
+
+  /// No description provided for @timeFormat24.
+  ///
+  /// In en, this message translates to:
+  /// **'24-hour (17:53)'**
+  String get timeFormat24;
+
+  /// No description provided for @timesShown.
+  ///
+  /// In en, this message translates to:
+  /// **'Times shown'**
+  String get timesShown;
+
+  /// No description provided for @timesShownHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden times are still counted down to, and their alerts still come.'**
+  String get timesShownHint;
 }
 
 class _AppLocalizationsDelegate

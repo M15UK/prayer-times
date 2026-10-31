@@ -202,4 +202,76 @@ class AppLocalizationsAr extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get am => 'ص';
+
+  @override
+  String get pm => 'م';
+
+  @override
+  String get display => 'العرض';
+
+  @override
+  String get displayHint => 'المظهر واللون وصيغة الوقت والمواقيت المعروضة';
+
+  @override
+  String get theme => 'المظهر';
+
+  @override
+  String get asPhone => 'حسب الهاتف';
+
+  @override
+  String get themeLight => 'فاتح';
+
+  @override
+  String get themeDark => 'داكن';
+
+  @override
+  String get colour => 'اللون';
+
+  @override
+  String get colourTeal => 'فيروزي';
+
+  @override
+  String get colourBlue => 'أزرق';
+
+  @override
+  String get colourGreen => 'أخضر';
+
+  @override
+  String get colourPurple => 'بنفسجي';
+
+  @override
+  String get colourAmber => 'كهرماني';
+
+  @override
+  String get colourWallpaper => 'ألوان الخلفية';
+
+  @override
+  String get colourWallpaperHint =>
+      'أندرويد 12 وأحدث؛ الهواتف الأخرى تظهر باللون الفيروزي';
+
+  @override
+  String get colourHint => 'تتغير ألوان الأدوات على أندرويد 12 وأحدث';
+
+  @override
+  String get asPhoneClockHint =>
+      'يظهر أي تغيير في الهاتف عند تشغيل التطبيق في المرة القادمة';
+
+  @override
+  String get timeFormat => 'صيغة الوقت';
+
+  @override
+  String get timeFormat12 => '12 ساعة (5:53 م)';
+
+  @override
+  String get timeFormat24 => '24 ساعة (17:53)';
+
+  @override
+  String get timesShown => 'المواقيت المعروضة';
+
+  @override
+  String get timesShownHint =>
+      'يستمر العد التنازلي للمواقيت المخفية، وتصل تنبيهاتها كالمعتاد.';
 }

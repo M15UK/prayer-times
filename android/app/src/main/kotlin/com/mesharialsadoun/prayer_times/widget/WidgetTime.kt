@@ -5,6 +5,17 @@ import java.util.Locale
 
 // Pure Kotlin, so it is tested on the computer.
 
+/**
+ * The (12-hour, 24-hour) formats for a live clock: as given, so the clock
+ * follows the phone, or both the same when [forced24Hour] chooses one.
+ */
+fun liveClockFormats(forced24Hour: Boolean?, twelveHour: String, twentyFourHour: String): Pair<String, String> =
+    when (forced24Hour) {
+        null -> twelveHour to twentyFourHour
+        true -> twentyFourHour to twentyFourHour
+        false -> twelveHour to twelveHour
+    }
+
 /** A clock time ready to show: its digits and, in 12-hour time, AM or PM (else empty). */
 data class ClockText(val digits: String, val suffix: String)
 
