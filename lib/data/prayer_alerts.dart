@@ -4,6 +4,7 @@ library;
 
 import 'package:timezone/timezone.dart' as tz;
 
+import 'package:prayer_times/data/adjusted_timetable.dart';
 import 'package:prayer_times/data/calculated_timetable.dart';
 import 'package:prayer_times/data/place_times.dart';
 import 'package:prayer_times/data/prayer_clock.dart';
@@ -30,7 +31,8 @@ int alertId(UpcomingPrayer prayer) =>
     int.parse(prayer.date.replaceAll('-', '')) * 10 + prayer.prayer.index;
 
 /// The alerts for every prayer in the next [alertDays] days of [times],
-/// written in [text]'s language. Calculated times say so, as on the screen.
+/// written in [text]'s language. Calculated or adjusted times say so, as on
+/// the screen.
 List<PrayerAlert> planAlerts({
   required ResolvedTimes times,
   required DateTime now,
@@ -40,6 +42,7 @@ List<PrayerAlert> planAlerts({
 }) {
   final where = times.place?.nameFor(text.localeName) ?? text.yourLocation;
   final calculated = isCalculated(times.timetable);
+  final adjusted = isAdjusted(times.timetable);
   return [
     for (final next in upcomingPrayers(
       times.timetable,
@@ -55,6 +58,7 @@ List<PrayerAlert> planAlerts({
           formatClock(next.time, is24Hour: is24Hour, text: text),
           where,
           if (calculated) text.calculated,
+          if (adjusted) text.adjustedMark,
         ].join(' · '),
       ),
   ];

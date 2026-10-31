@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'package:prayer_times/data/calculation_settings.dart';
 import 'package:prayer_times/data/display_settings.dart';
 import 'package:prayer_times/data/phone_notifications.dart';
 import 'package:prayer_times/data/prayer_alerts.dart';
@@ -8,11 +10,12 @@ import 'package:prayer_times/data/timetable.dart';
 import 'package:prayer_times/l10n/app_language.dart';
 import 'package:prayer_times/l10n/app_localizations.dart';
 import 'package:prayer_times/screens/alert_permission.dart';
+import 'package:prayer_times/screens/calculation_screen.dart';
 import 'package:prayer_times/screens/choice_section.dart';
 import 'package:prayer_times/screens/display_screen.dart';
 
-/// The app's settings: prayer alerts, the Display page, language and Asr
-/// time, and where the times on screen came from.
+/// The app's settings: prayer alerts, the Display page, language, the
+/// Prayer calculation page, and where the times on screen came from.
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({
     super.key,
@@ -21,7 +24,8 @@ class SettingsScreen extends StatelessWidget {
     required this.alerts,
     required this.notifications,
     required this.display,
-    this.timetable,
+    required this.calculation,
+    required this.timetable,
   });
 
   /// Setting any of these saves it and updates the whole app at once.
@@ -35,8 +39,13 @@ class SettingsScreen extends StatelessWidget {
   /// Theme, colour, time format and times shown (the Display page).
   final DisplaySettings display;
 
-  /// The times on screen, for their source (null: none loaded yet).
-  final Timetable? timetable;
+  /// Method, high latitudes and minute changes (with [asrMethod], the
+  /// Prayer calculation page).
+  final CalculationSettings calculation;
+
+  /// The times on screen, for their source (null: none loaded yet). Followed
+  /// as they change, e.g. after a change on the Prayer calculation page.
+  final ValueListenable<Timetable?> timetable;
 
   @override
   Widget build(BuildContext context) {
@@ -84,18 +93,30 @@ class SettingsScreen extends StatelessWidget {
             ],
           ),
           const Divider(),
-          ChoiceSection(
-            heading: text.asrTime,
-            setting: asrMethod,
-            options: [
-              (AsrMethod.standard, text.asrStandard, text.asrStandardHint),
-              (AsrMethod.hanafi, text.asrHanafiOption, text.asrHanafiHint),
-            ],
+          ListTile(
+            title: Text(text.prayerCalculation),
+            subtitle: Text(text.prayerCalculationHint),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => CalculationScreen(
+                  calculation: calculation,
+                  asrMethod: asrMethod,
+                ),
+              ),
+            ),
           ),
-          if (timetable case final shown?) ...[
-            const Divider(),
-            ListTile(title: Text(sourceLine(shown, text))),
-          ],
+          ValueListenableBuilder(
+            valueListenable: timetable,
+            builder: (context, shown, _) => Column(
+              children: [
+                if (shown != null) ...[
+                  const Divider(),
+                  ListTile(title: Text(sourceLine(shown, text))),
+                ],
+              ],
+            ),
+          ),
         ],
       ),
     );

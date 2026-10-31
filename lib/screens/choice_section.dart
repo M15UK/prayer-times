@@ -46,8 +46,10 @@ class ChoiceSection<T> extends StatelessWidget {
       // ("1 of 3, selected").
       builder: (context, selected, _) => RadioGroup<T>(
         groupValue: selected,
+        // `is T` rather than `!= null`, so a choice whose options include
+        // null (e.g. the automatic method) can choose it.
         onChanged: (option) {
-          if (option != null) setting.value = option;
+          if (option is T) setting.value = option;
         },
         child: Column(
           children: [
